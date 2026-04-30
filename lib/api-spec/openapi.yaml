@@ -521,6 +521,9 @@ components:
         toolSize:
           type: string
           nullable: true
+        qtyRequired:
+          type: integer
+          default: 1
         onHand:
           type: integer
           default: 0
@@ -577,6 +580,10 @@ components:
         toolSize:
           type: string
           nullable: true
+        qtyRequired:
+          type: integer
+          minimum: 0
+          default: 1
         onHand:
           type: integer
           minimum: 0
@@ -626,6 +633,9 @@ components:
         toolSize:
           type: string
           nullable: true
+        qtyRequired:
+          type: integer
+          minimum: 0
         onHand:
           type: integer
           minimum: 0

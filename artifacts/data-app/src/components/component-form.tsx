@@ -36,6 +36,7 @@ const formSchema = z.object({
   lengthMm: z.coerce.number().optional(),
   toolsRequired: z.string().optional(),
   toolSize: z.string().optional(),
+  qtyRequired: z.coerce.number().min(0).optional(),
   onHand: z.coerce.number().min(0).optional(),
   reserved: z.coerce.number().min(0).optional(),
   onOrder: z.coerce.number().min(0).optional(),
@@ -85,6 +86,7 @@ export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, pr
       lengthMm: undefined,
       toolsRequired: "",
       toolSize: "",
+      qtyRequired: 1,
       onHand: 0,
       reserved: 0,
       onOrder: 0,
@@ -106,6 +108,7 @@ export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, pr
         lengthMm: componentToEdit.lengthMm || undefined,
         toolsRequired: componentToEdit.toolsRequired || "",
         toolSize: componentToEdit.toolSize || "",
+        qtyRequired: componentToEdit.qtyRequired ?? 1,
         onHand: componentToEdit.onHand || 0,
         reserved: componentToEdit.reserved || 0,
         onOrder: componentToEdit.onOrder || 0,
@@ -125,6 +128,7 @@ export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, pr
         lengthMm: undefined,
         toolsRequired: "",
         toolSize: "",
+        qtyRequired: 1,
         onHand: 0,
         reserved: 0,
         onOrder: 0,
@@ -206,7 +210,10 @@ export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, pr
 
               <div className="space-y-4">
                 <h4 className="text-xs font-mono tracking-widest border-b border-border pb-1">SPECIFICATIONS</h4>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-4 gap-4">
+                  <FormField control={form.control} name="qtyRequired" render={({ field }) => (
+                    <FormItem><FormLabel className="font-mono text-[10px] text-muted-foreground">QTY REQ. / ASSY</FormLabel><FormControl><Input type="number" min="0" className="rounded-none font-mono text-xs bg-input" {...field} value={field.value === undefined ? 1 : field.value} /></FormControl><FormMessage /></FormItem>
+                  )} />
                   <FormField control={form.control} name="connectionType" render={({ field }) => (
                     <FormItem><FormLabel className="font-mono text-[10px] text-muted-foreground">CONNECTION</FormLabel><FormControl><Input className="rounded-none font-mono text-xs bg-input" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>
                   )} />

@@ -176,6 +176,7 @@ export const ListComponentsParams = zod.object({
   id: zod.coerce.number(),
 });
 
+export const listComponentsResponseQtyRequiredDefault = 1;
 export const listComponentsResponseOnHandDefault = 0;
 export const listComponentsResponseReservedDefault = 0;
 export const listComponentsResponseOnOrderDefault = 0;
@@ -201,6 +202,7 @@ export const ListComponentsResponseItem = zod.object({
   lengthMm: zod.number().nullish(),
   toolsRequired: zod.string().nullish(),
   toolSize: zod.string().nullish(),
+  qtyRequired: zod.number().default(listComponentsResponseQtyRequiredDefault),
   onHand: zod.number().default(listComponentsResponseOnHandDefault),
   reserved: zod.number().default(listComponentsResponseReservedDefault),
   onOrder: zod.number().default(listComponentsResponseOnOrderDefault),
@@ -216,6 +218,9 @@ export const ListComponentsResponse = zod.array(ListComponentsResponseItem);
 export const CreateComponentParams = zod.object({
   id: zod.coerce.number(),
 });
+
+export const createComponentBodyQtyRequiredDefault = 1;
+export const createComponentBodyQtyRequiredMin = 0;
 
 export const createComponentBodyOnHandDefault = 0;
 export const createComponentBodyOnHandMin = 0;
@@ -238,6 +243,10 @@ export const CreateComponentBody = zod.object({
   lengthMm: zod.number().nullish(),
   toolsRequired: zod.string().nullish(),
   toolSize: zod.string().nullish(),
+  qtyRequired: zod
+    .number()
+    .min(createComponentBodyQtyRequiredMin)
+    .default(createComponentBodyQtyRequiredDefault),
   onHand: zod
     .number()
     .min(createComponentBodyOnHandMin)
@@ -260,6 +269,8 @@ export const UpdateComponentParams = zod.object({
   componentId: zod.coerce.number(),
 });
 
+export const updateComponentBodyQtyRequiredMin = 0;
+
 export const updateComponentBodyOnHandMin = 0;
 
 export const updateComponentBodyReservedMin = 0;
@@ -278,12 +289,14 @@ export const UpdateComponentBody = zod.object({
   lengthMm: zod.number().nullish(),
   toolsRequired: zod.string().nullish(),
   toolSize: zod.string().nullish(),
+  qtyRequired: zod.number().min(updateComponentBodyQtyRequiredMin).optional(),
   onHand: zod.number().min(updateComponentBodyOnHandMin).optional(),
   reserved: zod.number().min(updateComponentBodyReservedMin).optional(),
   onOrder: zod.number().min(updateComponentBodyOnOrderMin).optional(),
   notes: zod.string().nullish(),
 });
 
+export const updateComponentResponseQtyRequiredDefault = 1;
 export const updateComponentResponseOnHandDefault = 0;
 export const updateComponentResponseReservedDefault = 0;
 export const updateComponentResponseOnOrderDefault = 0;
@@ -309,6 +322,7 @@ export const UpdateComponentResponse = zod.object({
   lengthMm: zod.number().nullish(),
   toolsRequired: zod.string().nullish(),
   toolSize: zod.string().nullish(),
+  qtyRequired: zod.number().default(updateComponentResponseQtyRequiredDefault),
   onHand: zod.number().default(updateComponentResponseOnHandDefault),
   reserved: zod.number().default(updateComponentResponseReservedDefault),
   onOrder: zod.number().default(updateComponentResponseOnOrderDefault),

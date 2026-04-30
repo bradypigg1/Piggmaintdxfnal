@@ -30,6 +30,7 @@ export const componentsTable = pgTable("components", {
   lengthMm: doublePrecision("length_mm"),
   toolsRequired: text("tools_required"),
   toolSize: text("tool_size"),
+  qtyRequired: integer("qty_required").default(1).notNull(),
   onHand: integer("on_hand").default(0).notNull(),
   reserved: integer("reserved").default(0).notNull(),
   onOrder: integer("on_order").default(0).notNull(),

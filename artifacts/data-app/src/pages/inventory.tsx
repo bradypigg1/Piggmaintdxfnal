@@ -30,7 +30,8 @@ export default function Inventory() {
 
   const componentQueries = useQueries({
     queries: models.map(model => ({
-      queryKey: [`/api/models/${model.id}/components`],
+      // Match the codegen default key so cross-page invalidations cascade.
+      queryKey: getListComponentsQueryKey(model.id),
       queryFn: async () => {
         const res = await fetch(`/api/models/${model.id}/components`);
         if (!res.ok) throw new Error("Failed to fetch");

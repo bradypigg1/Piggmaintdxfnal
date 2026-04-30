@@ -19,6 +19,8 @@ export interface UpdateComponentRequest {
   toolsRequired?: string | null;
   toolSize?: string | null;
   /** @minimum 0 */
+  qtyRequired?: number;
+  /** @minimum 0 */
   onHand?: number;
   /** @minimum 0 */
   reserved?: number;

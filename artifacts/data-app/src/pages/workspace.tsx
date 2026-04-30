@@ -4,7 +4,9 @@ import {
   useListComponents, 
   useListModels,
   useGetModel,
-  getGetModelQueryKey
+  getGetModelQueryKey,
+  getListComponentsQueryKey,
+  type Component
 } from "@workspace/api-client-react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stage } from "@react-three/drei";
@@ -45,6 +47,7 @@ export default function Workspace() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [componentFormOpen, setComponentFormOpen] = useState(false);
   const [pendingMeshName, setPendingMeshName] = useState<string | null>(null);
+  const [editingComponent, setEditingComponent] = useState<Component | null>(null);
   // The mesh that was just clicked but not yet linked to a component.
   // Highlighted in yellow with a confirm prompt so the user can verify
   // what they selected before opening the form.
@@ -52,7 +55,9 @@ export default function Workspace() {
 
   const { data: models = [] } = useListModels();
   const { data: model } = useGetModel(modelId!, { query: { enabled: !!modelId, queryKey: getGetModelQueryKey(modelId!) } });
-  const { data: components = [] } = useListComponents(modelId!, { query: { enabled: !!modelId, queryKey: ["components", modelId] } });
+  // Use the codegen default queryKey so updates from the Inventory page (which
+  // also invalidates getListComponentsQueryKey) propagate back to the viewer.
+  const { data: components = [] } = useListComponents(modelId!, { query: { enabled: !!modelId, queryKey: getListComponentsQueryKey(modelId!) } });
 
   const selectedComponent = components.find(c => c.id === componentId);
 
@@ -112,6 +117,13 @@ export default function Workspace() {
 
   const cancelPreview = () => {
     setPreviewMeshName(null);
+  };
+
+  const openEditFor = (comp: Component) => {
+    setEditingComponent(comp);
+    setPendingMeshName(null);
+    setPreviewMeshName(null);
+    setComponentFormOpen(true);
   };
 
   const updateUrl = (mId: number | null, cId: number | null) => {
@@ -207,7 +219,20 @@ export default function Workspace() {
               </div>
               
               <div className="p-4 border-b border-border">
-                <h3 className="text-[10px] text-primary font-mono tracking-widest mb-3">SELECTED COMPONENT</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-[10px] text-primary font-mono tracking-widest">SELECTED COMPONENT</h3>
+                  {selectedComponent && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 rounded-none font-mono text-[10px] text-primary hover:bg-primary/10 hover:text-primary"
+                      onClick={() => openEditFor(selectedComponent)}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      EDIT
+                    </Button>
+                  )}
+                </div>
                 {selectedComponent ? (
                   <div className="space-y-2 font-mono text-xs">
                     <div className="flex justify-between"><span className="text-muted-foreground">CODE</span><span className="text-accent">{selectedComponent.code}</span></div>
@@ -403,7 +428,13 @@ export default function Workspace() {
             <div className="h-[200px] border-t border-border bg-card flex flex-col shrink-0">
               <div className="h-8 border-b border-border flex items-center px-3 justify-between">
                 <span className="text-[10px] font-bold tracking-widest font-mono text-primary">COMPONENT NOTES</span>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => openEditFor(selectedComponent)}
+                  title="Edit component"
+                >
                   <Edit className="h-3 w-3" />
                 </Button>
               </div>
@@ -449,38 +480,56 @@ export default function Workspace() {
           <Table>
             <TableHeader className="bg-card sticky top-0 z-10 border-b border-border shadow-sm">
               <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="w-[40px] font-mono text-[10px] text-muted-foreground h-8"></TableHead>
+                <TableHead className="w-[40px] font-mono text-[10px] text-muted-foreground h-8 pl-3">
+                  <input type="checkbox" className="accent-primary" />
+                </TableHead>
                 <TableHead className="font-mono text-[10px] text-muted-foreground h-8">ID</TableHead>
                 <TableHead className="font-mono text-[10px] text-muted-foreground h-8">DESCRIPTION</TableHead>
                 <TableHead className="font-mono text-[10px] text-muted-foreground h-8">PART NUMBER</TableHead>
-                <TableHead className="font-mono text-[10px] text-muted-foreground h-8">TOOLS REQ</TableHead>
-                <TableHead className="font-mono text-[10px] text-muted-foreground h-8">SIZE</TableHead>
-                <TableHead className="font-mono text-[10px] text-muted-foreground h-8 text-right">INV</TableHead>
-                <TableHead className="font-mono text-[10px] text-muted-foreground h-8 text-center">STATUS</TableHead>
+                <TableHead className="font-mono text-[10px] text-muted-foreground h-8 text-center">QTY REQ.</TableHead>
+                <TableHead className="font-mono text-[10px] text-muted-foreground h-8">TOOLS REQUIRED</TableHead>
+                <TableHead className="font-mono text-[10px] text-muted-foreground h-8">TOOL SIZE</TableHead>
+                <TableHead className="font-mono text-[10px] text-muted-foreground h-8">LENGTH</TableHead>
+                <TableHead className="font-mono text-[10px] text-muted-foreground h-8 text-right">INV.COUNT</TableHead>
+                <TableHead className="font-mono text-[10px] text-muted-foreground h-8 text-right pr-4">STATUS</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {components.map(comp => (
-                <TableRow 
-                  key={comp.id} 
-                  className={`border-b border-border cursor-pointer transition-colors ${componentId === comp.id ? 'bg-primary/10 hover:bg-primary/15' : 'hover:bg-muted/50'}`}
-                  onClick={() => updateUrl(modelId, comp.id)}
-                >
-                  <TableCell className="py-2"><input type="checkbox" className="accent-primary" /></TableCell>
-                  <TableCell className="py-2 font-mono text-xs text-accent">{comp.code}</TableCell>
-                  <TableCell className="py-2 font-mono text-xs">{comp.description}</TableCell>
-                  <TableCell className="py-2 font-mono text-xs">{comp.partNumber}</TableCell>
-                  <TableCell className="py-2 font-mono text-xs text-muted-foreground">{comp.toolsRequired || '-'}</TableCell>
-                  <TableCell className="py-2 font-mono text-xs text-muted-foreground">{comp.toolSize || '-'}</TableCell>
-                  <TableCell className="py-2 font-mono text-xs text-right font-bold">{comp.onHand || 0}</TableCell>
-                  <TableCell className="py-2 text-center">
-                    <StatusBadge onHand={comp.onHand} reserved={comp.reserved} />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {components.map(comp => {
+                const info = getStatusInfo(comp.onHand, comp.reserved);
+                const isSelected = componentId === comp.id;
+                const statusColorClass =
+                  info.label === "OUT"
+                    ? "text-destructive"
+                    : info.label === "LOW"
+                    ? "text-[hsl(var(--status-low))]"
+                    : "text-[hsl(var(--status-available))]";
+                return (
+                  <TableRow
+                    key={comp.id}
+                    className={`border-b border-border cursor-pointer transition-colors ${isSelected ? 'bg-primary/10 hover:bg-primary/15' : 'hover:bg-muted/50'}`}
+                    onClick={() => updateUrl(modelId, comp.id)}
+                  >
+                    <TableCell className="py-2 pl-3" onClick={(e) => e.stopPropagation()}>
+                      <input type="checkbox" className="accent-primary" />
+                    </TableCell>
+                    <TableCell className="py-2 font-mono text-xs text-accent">{comp.code}</TableCell>
+                    <TableCell className="py-2 font-mono text-xs">{comp.description}</TableCell>
+                    <TableCell className="py-2 font-mono text-xs">{comp.partNumber}</TableCell>
+                    <TableCell className="py-2 font-mono text-xs text-center">{comp.qtyRequired ?? 1}</TableCell>
+                    <TableCell className="py-2 font-mono text-xs">{comp.toolsRequired || <span className="text-muted-foreground">—</span>}</TableCell>
+                    <TableCell className="py-2 font-mono text-xs">{comp.toolSize || <span className="text-muted-foreground">—</span>}</TableCell>
+                    <TableCell className="py-2 font-mono text-xs">{comp.lengthMm ? `${comp.lengthMm} mm` : <span className="text-muted-foreground">—</span>}</TableCell>
+                    <TableCell className={`py-2 font-mono text-xs text-right font-bold ${statusColorClass}`}>{comp.onHand || 0}</TableCell>
+                    <TableCell className={`py-2 font-mono text-xs text-right pr-4 font-bold tracking-wider ${statusColorClass}`}>
+                      {info.label === "AVAILABLE" ? "Available" : info.label === "LOW" ? "Low Stock" : "Out of Stock"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {components.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-8 text-center font-mono text-xs text-muted-foreground">
+                  <TableCell colSpan={10} className="py-8 text-center font-mono text-xs text-muted-foreground">
                     {modelId ? "No components found for this model." : "Select a model to view components."}
                   </TableCell>
                 </TableRow>
@@ -509,14 +558,17 @@ export default function Workspace() {
             if (!o) {
               setPendingMeshName(null);
               setPreviewMeshName(null);
+              setEditingComponent(null);
             }
           }}
           modelId={modelId}
+          componentToEdit={editingComponent ?? undefined}
           prefilledMeshName={pendingMeshName}
           onSuccess={(comp) => {
             setComponentFormOpen(false);
             setPendingMeshName(null);
             setPreviewMeshName(null);
+            setEditingComponent(null);
             updateUrl(modelId, comp.id);
           }}
         />

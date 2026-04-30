@@ -22,6 +22,7 @@ export interface Component {
   lengthMm?: number | null;
   toolsRequired?: string | null;
   toolSize?: string | null;
+  qtyRequired?: number;
   onHand?: number;
   reserved?: number;
   onOrder?: number;

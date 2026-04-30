@@ -92,6 +92,7 @@ export interface Component {
   lengthMm?: number | null;
   toolsRequired?: string | null;
   toolSize?: string | null;
+  qtyRequired?: number;
   onHand?: number;
   reserved?: number;
   onOrder?: number;
@@ -116,6 +117,8 @@ export interface CreateComponentRequest {
   toolsRequired?: string | null;
   toolSize?: string | null;
   /** @minimum 0 */
+  qtyRequired?: number;
+  /** @minimum 0 */
   onHand?: number;
   /** @minimum 0 */
   reserved?: number;
@@ -136,6 +139,8 @@ export interface UpdateComponentRequest {
   lengthMm?: number | null;
   toolsRequired?: string | null;
   toolSize?: string | null;
+  /** @minimum 0 */
+  qtyRequired?: number;
   /** @minimum 0 */
   onHand?: number;
   /** @minimum 0 */
