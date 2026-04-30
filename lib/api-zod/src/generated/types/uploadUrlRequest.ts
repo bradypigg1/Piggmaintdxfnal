@@ -13,4 +13,14 @@ export interface UploadUrlRequest {
   size: number;
   /** @minLength 1 */
   contentType: string;
+  /**
+   * Optional bundle/folder id. When provided together with `filename`, the file is stored at `uploads/<bundleId>/<filename>` so siblings (e.g. .gltf + .bin + textures) can resolve via relative URLs.
+   * @minLength 1
+   */
+  bundleId?: string;
+  /**
+   * Filename to use within the bundle folder. Required when `bundleId` is provided.
+   * @minLength 1
+   */
+  filename?: string;
 }

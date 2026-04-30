@@ -25,10 +25,23 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
   }
 
   try {
-    const { name, size, contentType } = parsed.data;
+    const { name, size, contentType, bundleId, filename } = parsed.data;
 
-    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-    const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+    let uploadURL: string;
+    let objectPath: string;
+    if (bundleId && filename) {
+      uploadURL = await objectStorageService.getBundleFileUploadURL(
+        bundleId,
+        filename,
+      );
+      objectPath = objectStorageService.bundleFileObjectPath(
+        bundleId,
+        filename,
+      );
+    } else {
+      uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+    }
 
     res.json(
       RequestUploadUrlResponse.parse({

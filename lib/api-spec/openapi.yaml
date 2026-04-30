@@ -356,6 +356,14 @@ components:
         contentType:
           type: string
           minLength: 1
+        bundleId:
+          type: string
+          minLength: 1
+          description: Optional bundle/folder id. When provided together with `filename`, the file is stored at `uploads/<bundleId>/<filename>` so siblings (e.g. .gltf + .bin + textures) can resolve via relative URLs.
+        filename:
+          type: string
+          minLength: 1
+          description: Filename to use within the bundle folder. Required when `bundleId` is provided.
     UploadUrlResponse:
       type: object
       required: [uploadURL, objectPath]

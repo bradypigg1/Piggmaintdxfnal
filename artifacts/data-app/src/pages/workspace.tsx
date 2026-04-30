@@ -232,7 +232,7 @@ export default function Workspace() {
               <div className="z-10 text-center font-mono border border-border bg-card/80 p-8 max-w-md">
                 <Upload className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h2 className="text-lg text-foreground mb-2">NO MODEL LOADED</h2>
-                <p className="text-sm text-muted-foreground mb-6">Upload a GLTF or GLB file to begin cataloging components and managing inventory.</p>
+                <p className="text-sm text-muted-foreground mb-6">Upload a single .glb file, or a .gltf together with its .bin and texture files, to begin cataloging components and managing inventory.</p>
                 <Button 
                   className="rounded-none border-primary bg-primary text-primary-foreground hover:bg-primary/90 font-bold tracking-widest"
                   onClick={() => setUploadOpen(true)}

@@ -128,6 +128,38 @@ export class ObjectStorageService {
     });
   }
 
+  /**
+   * Sign an upload URL for a file inside a bundle folder.
+   * The file lives at `uploads/<bundleId>/<filename>` so sibling files
+   * (e.g. a .gltf + its .bin + textures) can resolve via relative URLs.
+   */
+  async getBundleFileUploadURL(
+    bundleId: string,
+    filename: string,
+  ): Promise<string> {
+    const safeBundleId = sanitizePathSegment(bundleId);
+    const safeFilename = sanitizePathSegment(filename);
+    if (!safeBundleId || !safeFilename) {
+      throw new Error("Invalid bundleId or filename");
+    }
+    const privateObjectDir = this.getPrivateObjectDir();
+    const fullPath = `${privateObjectDir}/uploads/${safeBundleId}/${safeFilename}`;
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+    return signObjectURL({
+      bucketName,
+      objectName,
+      method: "PUT",
+      ttlSec: 900,
+    });
+  }
+
+  /** Build the canonical objectPath for a bundle file. */
+  bundleFileObjectPath(bundleId: string, filename: string): string {
+    const safeBundleId = sanitizePathSegment(bundleId);
+    const safeFilename = sanitizePathSegment(filename);
+    return `/objects/uploads/${safeBundleId}/${safeFilename}`;
+  }
+
   async getObjectEntityFile(objectPath: string): Promise<File> {
     if (!objectPath.startsWith("/objects/")) {
       throw new ObjectNotFoundError();
@@ -204,6 +236,15 @@ export class ObjectStorageService {
       requestedPermission: requestedPermission ?? ObjectPermission.READ,
     });
   }
+}
+
+function sanitizePathSegment(segment: string): string {
+  // Strip leading/trailing slashes, reject path traversal, allow safe chars.
+  const cleaned = segment.replace(/^\/+|\/+$/g, "");
+  if (cleaned.includes("..") || cleaned.includes("/")) return "";
+  // Allow alnum, dot, dash, underscore, space.
+  if (!/^[\w.\- ]+$/.test(cleaned)) return "";
+  return cleaned;
 }
 
 function parseObjectPath(path: string): {

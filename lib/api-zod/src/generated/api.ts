@@ -23,6 +23,20 @@ export const RequestUploadUrlBody = zod.object({
   name: zod.string().min(1),
   size: zod.number().min(1),
   contentType: zod.string().min(1),
+  bundleId: zod
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Optional bundle\/folder id. When provided together with `filename`, the file is stored at `uploads\/<bundleId>\/<filename>` so siblings (e.g. .gltf + .bin + textures) can resolve via relative URLs.",
+    ),
+  filename: zod
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Filename to use within the bundle folder. Required when `bundleId` is provided.",
+    ),
 });
 
 export const RequestUploadUrlResponse = zod.object({
@@ -33,6 +47,20 @@ export const RequestUploadUrlResponse = zod.object({
       name: zod.string().min(1),
       size: zod.number().min(1),
       contentType: zod.string().min(1),
+      bundleId: zod
+        .string()
+        .min(1)
+        .optional()
+        .describe(
+          "Optional bundle\/folder id. When provided together with `filename`, the file is stored at `uploads\/<bundleId>\/<filename>` so siblings (e.g. .gltf + .bin + textures) can resolve via relative URLs.",
+        ),
+      filename: zod
+        .string()
+        .min(1)
+        .optional()
+        .describe(
+          "Filename to use within the bundle folder. Required when `bundleId` is provided.",
+        ),
     })
     .optional(),
 });
