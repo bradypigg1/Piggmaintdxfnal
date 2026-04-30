@@ -6,11 +6,13 @@ import * as THREE from "three";
 interface ModelViewerProps {
   url: string;
   selectedMeshName: string | null;
+  previewMeshName: string | null;
   taggedMeshNames: Set<string>;
   onMeshClick: (meshName: string) => void;
 }
 
 const HIGHLIGHT_COLOR = new THREE.Color("#ff6a00");
+const PREVIEW_COLOR = new THREE.Color("#facc15");
 const TAGGED_COLOR = new THREE.Color("#3b82f6");
 const NEUTRAL = new THREE.Color("#000000");
 
@@ -35,6 +37,7 @@ function findNamedAncestor(obj: THREE.Object3D | null): string | null {
 export function ModelViewer({
   url,
   selectedMeshName,
+  previewMeshName,
   taggedMeshNames,
   onMeshClick,
 }: ModelViewerProps) {
@@ -108,6 +111,8 @@ export function ModelViewer({
       const ancestorName = findNamedAncestor(mesh);
       const isSelected =
         !!selectedMeshName && ancestorName === selectedMeshName;
+      const isPreview =
+        !!previewMeshName && ancestorName === previewMeshName;
       const isTagged = !!ancestorName && taggedMeshNames.has(ancestorName);
 
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -119,6 +124,9 @@ export function ModelViewer({
         if (isSelected) {
           m.emissive.copy(HIGHLIGHT_COLOR);
           m.emissiveIntensity = 0.9;
+        } else if (isPreview) {
+          m.emissive.copy(PREVIEW_COLOR);
+          m.emissiveIntensity = 0.75;
         } else if (isTagged) {
           m.emissive.copy(TAGGED_COLOR);
           m.emissiveIntensity = 0.35;
@@ -132,7 +140,7 @@ export function ModelViewer({
         m.needsUpdate = true;
       });
     });
-  }, [clonedScene, selectedMeshName, taggedMeshNames]);
+  }, [clonedScene, selectedMeshName, previewMeshName, taggedMeshNames]);
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();

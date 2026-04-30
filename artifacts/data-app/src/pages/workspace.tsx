@@ -10,7 +10,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stage } from "@react-three/drei";
 import { 
   Upload, Home, Maximize, RefreshCw, 
-  Box, Ruler, Plus, Search, Edit, MousePointer2
+  Box, Ruler, Plus, Search, Edit, MousePointer2, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -45,6 +45,10 @@ export default function Workspace() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [componentFormOpen, setComponentFormOpen] = useState(false);
   const [pendingMeshName, setPendingMeshName] = useState<string | null>(null);
+  // The mesh that was just clicked but not yet linked to a component.
+  // Highlighted in yellow with a confirm prompt so the user can verify
+  // what they selected before opening the form.
+  const [previewMeshName, setPreviewMeshName] = useState<string | null>(null);
 
   const { data: models = [] } = useListModels();
   const { data: model } = useGetModel(modelId!, { query: { enabled: !!modelId, queryKey: getGetModelQueryKey(modelId!) } });
@@ -89,14 +93,29 @@ export default function Workspace() {
           description: `${matches.length} components share the mesh "${meshName}". Selecting the first one. Consider renaming nodes in your CAD source for unambiguous tagging.`,
         });
       }
+      // Selecting an existing component clears any in-flight preview.
+      setPreviewMeshName(null);
       setSelection(modelId, matches[0].id);
       return;
     }
-    setPendingMeshName(meshName);
+    // Untagged mesh: highlight it and show a confirm prompt instead of
+    // jumping straight into the form. Lets the user verify they picked
+    // the right piece before entering component info.
+    setPreviewMeshName(meshName);
+  };
+
+  const confirmTagPreview = () => {
+    if (!previewMeshName) return;
+    setPendingMeshName(previewMeshName);
     setComponentFormOpen(true);
   };
 
+  const cancelPreview = () => {
+    setPreviewMeshName(null);
+  };
+
   const updateUrl = (mId: number | null, cId: number | null) => {
+    if (mId !== modelId) setPreviewMeshName(null);
     setSelection(mId, cId);
   };
 
@@ -251,6 +270,7 @@ export default function Workspace() {
                       <ModelViewer
                         url={`/api/storage${model.objectPath}`}
                         selectedMeshName={selectedMeshName}
+                        previewMeshName={previewMeshName}
                         taggedMeshNames={taggedMeshNames}
                         onMeshClick={handleMeshClick}
                       />
@@ -294,10 +314,46 @@ export default function Workspace() {
                   <span className="inline-block w-2 h-2 bg-[#3b82f6]" />
                   <span className="text-muted-foreground">TAGGED</span>
                   <span className="text-muted-foreground">·</span>
+                  <span className="inline-block w-2 h-2 bg-[#facc15]" />
+                  <span className="text-muted-foreground">PREVIEW</span>
+                  <span className="text-muted-foreground">·</span>
                   <span className="inline-block w-2 h-2 bg-primary" />
                   <span className="text-muted-foreground">SELECTED</span>
                 </div>
               </div>
+
+              {previewMeshName && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+                  <div className="font-mono text-xs bg-black/85 border border-[#facc15] backdrop-blur-sm shadow-lg">
+                    <div className="px-3 py-2 border-b border-border flex items-center gap-2">
+                      <span className="inline-block w-2 h-2 bg-[#facc15]" />
+                      <span className="text-[10px] text-[#facc15] tracking-widest">PART HIGHLIGHTED</span>
+                    </div>
+                    <div className="px-3 py-2 max-w-[420px]">
+                      <div className="text-[10px] text-muted-foreground tracking-widest mb-1">MESH</div>
+                      <div className="text-foreground truncate" title={previewMeshName}>{previewMeshName}</div>
+                    </div>
+                    <div className="flex border-t border-border">
+                      <button
+                        type="button"
+                        onClick={cancelPreview}
+                        className="flex-1 px-3 py-2 text-[10px] tracking-widest text-muted-foreground hover:bg-muted/30 hover:text-foreground border-r border-border flex items-center justify-center gap-1"
+                      >
+                        <X className="h-3 w-3" />
+                        CANCEL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={confirmTagPreview}
+                        className="flex-1 px-3 py-2 text-[10px] tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-1"
+                      >
+                        <Plus className="h-3 w-3" />
+                        TAG THIS PART
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -450,13 +506,17 @@ export default function Workspace() {
           open={componentFormOpen} 
           onOpenChange={(o) => {
             setComponentFormOpen(o);
-            if (!o) setPendingMeshName(null);
+            if (!o) {
+              setPendingMeshName(null);
+              setPreviewMeshName(null);
+            }
           }}
           modelId={modelId}
           prefilledMeshName={pendingMeshName}
           onSuccess={(comp) => {
             setComponentFormOpen(false);
             setPendingMeshName(null);
+            setPreviewMeshName(null);
             updateUrl(modelId, comp.id);
           }}
         />
