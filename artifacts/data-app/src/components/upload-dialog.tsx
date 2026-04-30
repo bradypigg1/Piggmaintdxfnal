@@ -62,13 +62,18 @@ export function UploadDialog({ open, onOpenChange, onSuccess }: UploadDialogProp
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (selected) {
-      if (!selected.name.endsWith('.gltf') && !selected.name.endsWith('.glb')) {
-        toast({ title: "Invalid file type", description: "Please select a .gltf or .glb file", variant: "destructive" });
+      const lower = selected.name.toLowerCase();
+      if (!lower.endsWith('.glb')) {
+        toast({
+          title: "GLB format required",
+          description: ".gltf files reference external textures and meshes. Re-export as a single-file .glb (binary GLTF) to upload.",
+          variant: "destructive",
+        });
         return;
       }
       setFile(selected);
-      form.setValue("name", selected.name.replace(/\.(gltf|glb)$/i, ''));
-      form.setValue("modelName", selected.name.replace(/\.(gltf|glb)$/i, ''));
+      form.setValue("name", selected.name.replace(/\.glb$/i, ''));
+      form.setValue("modelName", selected.name.replace(/\.glb$/i, ''));
       setStep("details");
     }
   };
@@ -134,12 +139,13 @@ export function UploadDialog({ open, onOpenChange, onSuccess }: UploadDialogProp
           <div className="border-2 border-dashed border-border p-12 flex flex-col items-center justify-center text-center">
             <Upload className="h-10 w-10 text-muted-foreground mb-4" />
             <h3 className="font-mono text-sm mb-2 text-foreground">SELECT OR DROP MODEL FILE</h3>
-            <p className="font-mono text-xs text-muted-foreground mb-6">Supports .gltf and .glb files up to 100MB.</p>
+            <p className="font-mono text-xs text-muted-foreground mb-2">Single-file binary GLTF (<span className="text-primary">.glb</span>) up to 100MB.</p>
+            <p className="font-mono text-[10px] text-muted-foreground/70 mb-6 max-w-xs">.gltf files reference external textures and meshes — re-export as .glb to bundle everything.</p>
             <div className="relative">
               <input 
                 type="file" 
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                accept=".gltf,.glb"
+                accept=".glb,model/gltf-binary"
                 onChange={handleFileChange}
               />
               <Button className="rounded-none font-mono text-xs">CHOOSE FILE</Button>

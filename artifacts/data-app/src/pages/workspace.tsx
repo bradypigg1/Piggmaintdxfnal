@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UploadDialog } from "@/components/upload-dialog";
 import { ComponentForm } from "@/components/component-form";
+import { ViewerErrorBoundary } from "@/components/viewer-error-boundary";
 
 // Helper for status colors
 export function getStatusInfo(onHand = 0, reserved = 0) {
@@ -211,18 +212,20 @@ export default function Workspace() {
         {/* Center - 3D Viewport */}
         <div className="flex-1 flex flex-col min-w-0 bg-black relative">
           {model ? (
-            <Canvas camera={{ position: [5, 5, 5], fov: 50 }}>
-              <color attach="background" args={['#0a0a0a']} />
-              <ambientLight intensity={0.5} />
-              <directionalLight position={[10, 10, 10]} intensity={1} />
-              <Suspense fallback={null}>
-                <Stage environment="warehouse" intensity={0.5}>
-                  {model.objectPath && <ModelViewer url={`/api/storage${model.objectPath}`} />}
-                </Stage>
-              </Suspense>
-              <Grid infiniteGrid fadeDistance={20} sectionColor="#333" cellColor="#222" />
-              <OrbitControls makeDefault />
-            </Canvas>
+            <ViewerErrorBoundary resetKey={model.id}>
+              <Canvas camera={{ position: [5, 5, 5], fov: 50 }}>
+                <color attach="background" args={['#0a0a0a']} />
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[10, 10, 10]} intensity={1} />
+                <Suspense fallback={null}>
+                  <Stage environment="warehouse" intensity={0.5}>
+                    {model.objectPath && <ModelViewer url={`/api/storage${model.objectPath}`} />}
+                  </Stage>
+                </Suspense>
+                <Grid infiniteGrid fadeDistance={20} sectionColor="#333" cellColor="#222" />
+                <OrbitControls makeDefault />
+              </Canvas>
+            </ViewerErrorBoundary>
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_center,#111_0%,#000_100%)]">
               <div className="absolute inset-0 pointer-events-none opacity-30" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
