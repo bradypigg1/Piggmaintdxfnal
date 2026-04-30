@@ -496,6 +496,10 @@ components:
           type: string
         partNumber:
           type: string
+        meshName:
+          type: string
+          nullable: true
+          description: Name of the GLTF mesh node this component is associated with. Set when a user clicks a piece in the 3D viewer.
         manufacturer:
           type: string
           nullable: true
@@ -549,6 +553,9 @@ components:
         partNumber:
           type: string
           minLength: 1
+        meshName:
+          type: string
+          nullable: true
         manufacturer:
           type: string
           nullable: true
@@ -595,6 +602,9 @@ components:
           type: string
         partNumber:
           type: string
+        meshName:
+          type: string
+          nullable: true
         manufacturer:
           type: string
           nullable: true

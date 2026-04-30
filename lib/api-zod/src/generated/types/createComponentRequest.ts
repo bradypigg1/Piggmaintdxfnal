@@ -13,6 +13,7 @@ export interface CreateComponentRequest {
   description: string;
   /** @minLength 1 */
   partNumber: string;
+  meshName?: string | null;
   manufacturer?: string | null;
   weightKg?: number | null;
   connectionType?: string | null;

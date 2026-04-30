@@ -35,6 +35,12 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 ## Domain
 
 - `models` table: GLTF model metadata (projectName, modelName, serialNumber, revision, objectPath).
-- `components` table: parts on a model with code, partNumber, manufacturer, weightKg, connectionType, wrenchSize, lengthMm, toolsRequired, toolSize, onHand, reserved, onOrder, notes.
+- `components` table: parts on a model with code, partNumber, meshName, manufacturer, weightKg, connectionType, wrenchSize, lengthMm, toolsRequired, toolSize, onHand, reserved, onOrder, notes. `meshName` links a component to a named node in the GLTF scene; the API normalizes blank strings to NULL on create/update.
 - Status derivation (client): `available = onHand - reserved`; `<=0 OUT`, `<=2 LOW`, else AVAILABLE.
 - GLTF upload: request presigned URL → PUT to GCS → POST `/api/models` with `objectPath` → load via `useGLTF("/api/storage" + objectPath)`.
+
+## Workspace UX
+
+- 3D viewer (`components/model-viewer.tsx`) clones GLTF scene + materials per instance, disposes cloned materials on unmount/url change to avoid GPU leaks, walks click events up to the nearest named ancestor, and applies emissive highlight (orange = selected, blue = tagged-but-not-selected).
+- Click on a named mesh: if a component is already linked to that name, it becomes selected; otherwise the Add Component form opens with the mesh pre-linked and a code suggestion derived from the mesh name. Duplicate mesh names trigger a one-time toast warning per name; first match wins.
+- Selection state persists across sidebar tab navigation via `hooks/use-selected-model.ts` — URL is the source of truth on the workspace page, localStorage backs it elsewhere, and a `storage` event keeps multiple tabs in sync.

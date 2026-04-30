@@ -13,6 +13,8 @@ export interface Component {
   code: string;
   description: string;
   partNumber: string;
+  /** Name of the GLTF mesh node this component is associated with. Set when a user clicks a piece in the 3D viewer. */
+  meshName?: string | null;
   manufacturer?: string | null;
   weightKg?: number | null;
   connectionType?: string | null;

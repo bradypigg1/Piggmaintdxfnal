@@ -1,28 +1,26 @@
-import { useState, Suspense } from "react";
-import { useLocation } from "wouter";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useRef, useState, Suspense } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { 
-  useListModels, 
   useListComponents, 
-  getListModelsQueryKey,
+  useListModels,
   useGetModel,
   getGetModelQueryKey
 } from "@workspace/api-client-react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stage, Grid, useGLTF } from "@react-three/drei";
+import { OrbitControls, Stage } from "@react-three/drei";
 import { 
-  Upload, Home, ZoomIn, Maximize, RefreshCw, 
-  Box, Ruler, Plus, Search, Download, Trash2, Edit
+  Upload, Home, Maximize, RefreshCw, 
+  Box, Ruler, Plus, Search, Edit, MousePointer2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UploadDialog } from "@/components/upload-dialog";
 import { ComponentForm } from "@/components/component-form";
 import { ViewerErrorBoundary } from "@/components/viewer-error-boundary";
+import { ModelViewer } from "@/components/model-viewer";
+import { useSelectedModel } from "@/hooks/use-selected-model";
 
 // Helper for status colors
 export function getStatusInfo(onHand = 0, reserved = 0) {
@@ -41,22 +39,12 @@ export function StatusBadge({ onHand = 0, reserved = 0 }: { onHand?: number, res
   );
 }
 
-function ModelViewer({ url }: { url: string }) {
-  const { scene } = useGLTF(url);
-  return <primitive object={scene} />;
-}
-
 export default function Workspace() {
-  const [location] = useLocation();
-  const searchParams = new URLSearchParams(window.location.search);
-  const modelIdParam = searchParams.get("modelId");
-  const componentIdParam = searchParams.get("componentId");
-  
-  const [modelId, setModelId] = useState<number | null>(modelIdParam ? parseInt(modelIdParam) : null);
-  const [componentId, setComponentId] = useState<number | null>(componentIdParam ? parseInt(componentIdParam) : null);
+  const { modelId, componentId, setSelection } = useSelectedModel();
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [componentFormOpen, setComponentFormOpen] = useState(false);
+  const [pendingMeshName, setPendingMeshName] = useState<string | null>(null);
 
   const { data: models = [] } = useListModels();
   const { data: model } = useGetModel(modelId!, { query: { enabled: !!modelId, queryKey: getGetModelQueryKey(modelId!) } });
@@ -64,13 +52,52 @@ export default function Workspace() {
 
   const selectedComponent = components.find(c => c.id === componentId);
 
+  const { toast } = useToast();
+
+  // Lookup table: mesh name -> components linked to it. We keep all matches
+  // because GLTF exports often have duplicate node names, and we want to warn
+  // the user instead of silently picking the wrong one.
+  const meshToComponents = useMemo(() => {
+    const map = new Map<string, typeof components[number][]>();
+    components.forEach(c => {
+      if (c.meshName) {
+        const arr = map.get(c.meshName);
+        if (arr) arr.push(c);
+        else map.set(c.meshName, [c]);
+      }
+    });
+    return map;
+  }, [components]);
+
+  const taggedMeshNames = useMemo(
+    () => new Set(meshToComponents.keys()),
+    [meshToComponents],
+  );
+
+  // Mesh name of the currently selected component (for highlight).
+  const selectedMeshName = selectedComponent?.meshName ?? null;
+
+  const warnedDuplicatesRef = useRef<Set<string>>(new Set());
+
+  const handleMeshClick = (meshName: string) => {
+    const matches = meshToComponents.get(meshName);
+    if (matches && matches.length > 0) {
+      if (matches.length > 1 && !warnedDuplicatesRef.current.has(meshName)) {
+        warnedDuplicatesRef.current.add(meshName);
+        toast({
+          title: "Duplicate mesh name",
+          description: `${matches.length} components share the mesh "${meshName}". Selecting the first one. Consider renaming nodes in your CAD source for unambiguous tagging.`,
+        });
+      }
+      setSelection(modelId, matches[0].id);
+      return;
+    }
+    setPendingMeshName(meshName);
+    setComponentFormOpen(true);
+  };
+
   const updateUrl = (mId: number | null, cId: number | null) => {
-    const params = new URLSearchParams();
-    if (mId) params.set("modelId", mId.toString());
-    if (cId) params.set("componentId", cId.toString());
-    window.history.replaceState(null, "", `/?${params.toString()}`);
-    setModelId(mId);
-    setComponentId(cId);
+    setSelection(mId, cId);
   };
 
   return (
@@ -167,6 +194,7 @@ export default function Workspace() {
                     <div className="flex justify-between"><span className="text-muted-foreground">CODE</span><span className="text-accent">{selectedComponent.code}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">DESC</span><span className="truncate max-w-[140px] text-right">{selectedComponent.description}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">PART NO</span><span>{selectedComponent.partNumber}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">MESH</span><span className="truncate max-w-[140px] text-right text-primary" title={selectedComponent.meshName || '-'}>{selectedComponent.meshName || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">MFG</span><span>{selectedComponent.manufacturer || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">WEIGHT</span><span>{selectedComponent.weightKg ? `${selectedComponent.weightKg} kg` : '-'}</span></div>
                   </div>
@@ -219,10 +247,16 @@ export default function Workspace() {
                 <directionalLight position={[10, 10, 10]} intensity={1} />
                 <Suspense fallback={null}>
                   <Stage environment="warehouse" intensity={0.5}>
-                    {model.objectPath && <ModelViewer url={`/api/storage${model.objectPath}`} />}
+                    {model.objectPath && (
+                      <ModelViewer
+                        url={`/api/storage${model.objectPath}`}
+                        selectedMeshName={selectedMeshName}
+                        taggedMeshNames={taggedMeshNames}
+                        onMeshClick={handleMeshClick}
+                      />
+                    )}
                   </Stage>
                 </Suspense>
-                <Grid infiniteGrid fadeDistance={20} sectionColor="#333" cellColor="#222" />
                 <OrbitControls makeDefault />
               </Canvas>
             </ViewerErrorBoundary>
@@ -245,12 +279,26 @@ export default function Workspace() {
           
           {/* Overlay Stats/UI */}
           {model && (
-            <div className="absolute top-4 left-4 pointer-events-none">
-              <div className="font-mono text-xs bg-black/60 border border-border p-2 backdrop-blur-sm">
-                <div className="text-primary font-bold">{model.name}</div>
-                <div className="text-muted-foreground">COMPONENTS: {components.length}</div>
+            <>
+              <div className="absolute top-4 left-4 pointer-events-none">
+                <div className="font-mono text-xs bg-black/60 border border-border p-2 backdrop-blur-sm">
+                  <div className="text-primary font-bold">{model.name}</div>
+                  <div className="text-muted-foreground">COMPONENTS: {components.length}</div>
+                </div>
               </div>
-            </div>
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
+                <div className="flex items-center gap-2 font-mono text-[10px] bg-black/70 border border-border px-3 py-1.5 backdrop-blur-sm">
+                  <MousePointer2 className="h-3 w-3 text-primary" />
+                  <span className="text-muted-foreground tracking-widest">CLICK ANY PART TO TAG IT</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="inline-block w-2 h-2 bg-[#3b82f6]" />
+                  <span className="text-muted-foreground">TAGGED</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="inline-block w-2 h-2 bg-primary" />
+                  <span className="text-muted-foreground">SELECTED</span>
+                </div>
+              </div>
+            </>
           )}
         </div>
 
@@ -400,10 +448,15 @@ export default function Workspace() {
       {componentFormOpen && modelId && (
         <ComponentForm 
           open={componentFormOpen} 
-          onOpenChange={setComponentFormOpen}
+          onOpenChange={(o) => {
+            setComponentFormOpen(o);
+            if (!o) setPendingMeshName(null);
+          }}
           modelId={modelId}
+          prefilledMeshName={pendingMeshName}
           onSuccess={(comp) => {
             setComponentFormOpen(false);
+            setPendingMeshName(null);
             updateUrl(modelId, comp.id);
           }}
         />

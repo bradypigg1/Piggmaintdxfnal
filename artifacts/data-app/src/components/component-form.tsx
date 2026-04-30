@@ -7,7 +7,6 @@ import {
   useCreateComponent, 
   useUpdateComponent,
   getListComponentsQueryKey,
-  useGetModel,
   Component
 } from "@workspace/api-client-react";
 import { 
@@ -23,12 +22,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Link2 } from "lucide-react";
 
 const formSchema = z.object({
   code: z.string().min(1, "Code is required"),
   description: z.string().min(1, "Description is required"),
   partNumber: z.string().min(1, "Part number is required"),
+  meshName: z.string().optional(),
   manufacturer: z.string().optional(),
   weightKg: z.coerce.number().optional(),
   connectionType: z.string().optional(),
@@ -49,10 +49,21 @@ interface ComponentFormProps {
   onOpenChange: (open: boolean) => void;
   modelId: number;
   componentToEdit?: Component;
+  /** When opening from a 3D click, prefill the mesh link + suggested code/description. */
+  prefilledMeshName?: string | null;
   onSuccess: (component: Component) => void;
 }
 
-export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, onSuccess }: ComponentFormProps) {
+function suggestCodeFromMesh(meshName: string): string {
+  // Convert "Cylinder_001" / "engine-block.001" → "CYLINDER-001"
+  return meshName
+    .replace(/[._]+/g, "-")
+    .replace(/[^a-zA-Z0-9\- ]/g, "")
+    .toUpperCase()
+    .slice(0, 24);
+}
+
+export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, prefilledMeshName, onSuccess }: ComponentFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -66,6 +77,7 @@ export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, on
       code: "",
       description: "",
       partNumber: "",
+      meshName: "",
       manufacturer: "",
       weightKg: undefined,
       connectionType: "",
@@ -86,6 +98,7 @@ export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, on
         code: componentToEdit.code,
         description: componentToEdit.description,
         partNumber: componentToEdit.partNumber,
+        meshName: componentToEdit.meshName || "",
         manufacturer: componentToEdit.manufacturer || "",
         weightKg: componentToEdit.weightKg || undefined,
         connectionType: componentToEdit.connectionType || "",
@@ -99,10 +112,12 @@ export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, on
         notes: componentToEdit.notes || "",
       });
     } else if (open) {
+      const suggested = prefilledMeshName ? suggestCodeFromMesh(prefilledMeshName) : "";
       form.reset({
-        code: "",
-        description: "",
+        code: suggested,
+        description: prefilledMeshName ?? "",
         partNumber: "",
+        meshName: prefilledMeshName ?? "",
         manufacturer: "",
         weightKg: undefined,
         connectionType: "",
@@ -116,7 +131,7 @@ export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, on
         notes: "",
       });
     }
-  }, [componentToEdit, open, form]);
+  }, [componentToEdit, open, prefilledMeshName, form]);
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -158,7 +173,19 @@ export function ComponentForm({ open, onOpenChange, modelId, componentToEdit, on
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto pr-2 space-y-6">
-              
+
+              <FormField control={form.control} name="meshName" render={({ field }) => (
+                field.value ? (
+                  <FormItem>
+                    <div className="flex items-center gap-2 border border-primary/50 bg-primary/5 px-3 py-2 font-mono text-[11px]">
+                      <Link2 className="h-3 w-3 text-primary shrink-0" />
+                      <span className="text-muted-foreground tracking-widest">LINKED MESH</span>
+                      <span className="text-primary truncate flex-1" title={field.value}>{field.value}</span>
+                    </div>
+                  </FormItem>
+                ) : <FormItem className="hidden" />
+              )} />
+
               <div className="space-y-4">
                 <h4 className="text-xs font-mono tracking-widest border-b border-border pb-1">BASIC INFO</h4>
                 <div className="grid grid-cols-2 gap-4">

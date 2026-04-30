@@ -15,6 +15,7 @@ function serialize(c: typeof componentsTable.$inferSelect) {
     code: c.code,
     description: c.description,
     partNumber: c.partNumber,
+    meshName: c.meshName,
     manufacturer: c.manufacturer,
     weightKg: c.weightKg,
     connectionType: c.connectionType,
@@ -75,6 +76,7 @@ router.post("/models/:id/components", async (req: Request, res: Response) => {
         code: d.code,
         description: d.description,
         partNumber: d.partNumber,
+        meshName: d.meshName?.trim() ? d.meshName : null,
         manufacturer: d.manufacturer ?? null,
         weightKg: d.weightKg ?? null,
         connectionType: d.connectionType ?? null,
@@ -112,6 +114,7 @@ router.patch("/components/:componentId", async (req: Request, res: Response) => 
     "code",
     "description",
     "partNumber",
+    "meshName",
     "manufacturer",
     "weightKg",
     "connectionType",
@@ -124,7 +127,15 @@ router.patch("/components/:componentId", async (req: Request, res: Response) => 
     "onOrder",
     "notes",
   ] as const) {
-    if (d[key] !== undefined) update[key] = d[key];
+    if (d[key] !== undefined) {
+      // Normalize blank meshName to null so name-based mesh lookups stay clean.
+      if (key === "meshName") {
+        const v = d.meshName;
+        update[key] = typeof v === "string" && v.trim() ? v : null;
+      } else {
+        update[key] = d[key];
+      }
+    }
   }
   const [row] = await db
     .update(componentsTable)

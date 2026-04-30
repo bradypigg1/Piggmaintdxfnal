@@ -22,6 +22,7 @@ export const componentsTable = pgTable("components", {
   code: text("code").notNull(),
   description: text("description").notNull(),
   partNumber: text("part_number").notNull(),
+  meshName: text("mesh_name"),
   manufacturer: text("manufacturer"),
   weightKg: doublePrecision("weight_kg"),
   connectionType: text("connection_type"),

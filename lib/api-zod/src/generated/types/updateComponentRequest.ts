@@ -10,6 +10,7 @@ export interface UpdateComponentRequest {
   code?: string;
   description?: string;
   partNumber?: string;
+  meshName?: string | null;
   manufacturer?: string | null;
   weightKg?: number | null;
   connectionType?: string | null;

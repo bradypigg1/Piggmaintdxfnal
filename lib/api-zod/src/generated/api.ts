@@ -188,6 +188,12 @@ export const ListComponentsResponseItem = zod.object({
     .describe("Short identifier shown as a tag in the viewer (e.g. CYL-01)"),
   description: zod.string(),
   partNumber: zod.string(),
+  meshName: zod
+    .string()
+    .nullish()
+    .describe(
+      "Name of the GLTF mesh node this component is associated with. Set when a user clicks a piece in the 3D viewer.",
+    ),
   manufacturer: zod.string().nullish(),
   weightKg: zod.number().nullish(),
   connectionType: zod.string().nullish(),
@@ -224,6 +230,7 @@ export const CreateComponentBody = zod.object({
   code: zod.string().min(1),
   description: zod.string().min(1),
   partNumber: zod.string().min(1),
+  meshName: zod.string().nullish(),
   manufacturer: zod.string().nullish(),
   weightKg: zod.number().nullish(),
   connectionType: zod.string().nullish(),
@@ -263,6 +270,7 @@ export const UpdateComponentBody = zod.object({
   code: zod.string().optional(),
   description: zod.string().optional(),
   partNumber: zod.string().optional(),
+  meshName: zod.string().nullish(),
   manufacturer: zod.string().nullish(),
   weightKg: zod.number().nullish(),
   connectionType: zod.string().nullish(),
@@ -288,6 +296,12 @@ export const UpdateComponentResponse = zod.object({
     .describe("Short identifier shown as a tag in the viewer (e.g. CYL-01)"),
   description: zod.string(),
   partNumber: zod.string(),
+  meshName: zod
+    .string()
+    .nullish()
+    .describe(
+      "Name of the GLTF mesh node this component is associated with. Set when a user clicks a piece in the 3D viewer.",
+    ),
   manufacturer: zod.string().nullish(),
   weightKg: zod.number().nullish(),
   connectionType: zod.string().nullish(),
