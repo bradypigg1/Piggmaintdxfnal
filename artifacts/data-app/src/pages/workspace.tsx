@@ -314,7 +314,7 @@ export default function Workspace() {
                   <span className="inline-block w-2 h-2 bg-[#3b82f6]" />
                   <span className="text-muted-foreground">TAGGED</span>
                   <span className="text-muted-foreground">·</span>
-                  <span className="inline-block w-2 h-2 bg-[#facc15]" />
+                  <span className="inline-block w-2 h-2 bg-[#38bdf8]" />
                   <span className="text-muted-foreground">PREVIEW</span>
                   <span className="text-muted-foreground">·</span>
                   <span className="inline-block w-2 h-2 bg-primary" />
@@ -324,10 +324,10 @@ export default function Workspace() {
 
               {previewMeshName && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-                  <div className="font-mono text-xs bg-black/85 border border-[#facc15] backdrop-blur-sm shadow-lg">
+                  <div className="font-mono text-xs bg-black/85 border border-[#38bdf8] backdrop-blur-sm shadow-lg">
                     <div className="px-3 py-2 border-b border-border flex items-center gap-2">
-                      <span className="inline-block w-2 h-2 bg-[#facc15]" />
-                      <span className="text-[10px] text-[#facc15] tracking-widest">PART HIGHLIGHTED</span>
+                      <span className="inline-block w-2 h-2 bg-[#38bdf8]" />
+                      <span className="text-[10px] text-[#38bdf8] tracking-widest">PART HIGHLIGHTED</span>
                     </div>
                     <div className="px-3 py-2 max-w-[420px]">
                       <div className="text-[10px] text-muted-foreground tracking-widest mb-1">MESH</div>

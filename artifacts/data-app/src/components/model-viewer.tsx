@@ -12,7 +12,7 @@ interface ModelViewerProps {
 }
 
 const HIGHLIGHT_COLOR = new THREE.Color("#ff6a00");
-const PREVIEW_COLOR = new THREE.Color("#facc15");
+const PREVIEW_COLOR = new THREE.Color("#38bdf8");
 const TAGGED_COLOR = new THREE.Color("#3b82f6");
 const NEUTRAL = new THREE.Color("#000000");
 
