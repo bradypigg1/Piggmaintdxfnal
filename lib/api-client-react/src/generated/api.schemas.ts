@@ -8,3 +8,159 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface UploadUrlRequest {
+  /** @minLength 1 */
+  name: string;
+  /** @minimum 1 */
+  size: number;
+  /** @minLength 1 */
+  contentType: string;
+}
+
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+  metadata?: UploadUrlRequest;
+}
+
+export interface ErrorEnvelope {
+  error: string;
+}
+
+export interface Model {
+  id: number;
+  name: string;
+  projectName?: string | null;
+  modelName?: string | null;
+  serialNumber?: string | null;
+  revision?: string | null;
+  /** Path to the GLTF file in object storage (e.g. /objects/uploads/uuid) */
+  objectPath: string;
+  fileName?: string | null;
+  fileSize?: number | null;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface CreateModelRequest {
+  /** @minLength 1 */
+  name: string;
+  projectName?: string | null;
+  modelName?: string | null;
+  serialNumber?: string | null;
+  revision?: string | null;
+  /** @minLength 1 */
+  objectPath: string;
+  fileName?: string | null;
+  fileSize?: number | null;
+  notes?: string | null;
+}
+
+export interface UpdateModelRequest {
+  name?: string;
+  projectName?: string | null;
+  modelName?: string | null;
+  serialNumber?: string | null;
+  revision?: string | null;
+  notes?: string | null;
+}
+
+export interface Component {
+  id: number;
+  modelId: number;
+  /** Short identifier shown as a tag in the viewer (e.g. CYL-01) */
+  code: string;
+  description: string;
+  partNumber: string;
+  manufacturer?: string | null;
+  weightKg?: number | null;
+  connectionType?: string | null;
+  wrenchSize?: string | null;
+  lengthMm?: number | null;
+  toolsRequired?: string | null;
+  toolSize?: string | null;
+  onHand?: number;
+  reserved?: number;
+  onOrder?: number;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateComponentRequest {
+  /** @minLength 1 */
+  code: string;
+  /** @minLength 1 */
+  description: string;
+  /** @minLength 1 */
+  partNumber: string;
+  manufacturer?: string | null;
+  weightKg?: number | null;
+  connectionType?: string | null;
+  wrenchSize?: string | null;
+  lengthMm?: number | null;
+  toolsRequired?: string | null;
+  toolSize?: string | null;
+  /** @minimum 0 */
+  onHand?: number;
+  /** @minimum 0 */
+  reserved?: number;
+  /** @minimum 0 */
+  onOrder?: number;
+  notes?: string | null;
+}
+
+export interface UpdateComponentRequest {
+  code?: string;
+  description?: string;
+  partNumber?: string;
+  manufacturer?: string | null;
+  weightKg?: number | null;
+  connectionType?: string | null;
+  wrenchSize?: string | null;
+  lengthMm?: number | null;
+  toolsRequired?: string | null;
+  toolSize?: string | null;
+  /** @minimum 0 */
+  onHand?: number;
+  /** @minimum 0 */
+  reserved?: number;
+  /** @minimum 0 */
+  onOrder?: number;
+  notes?: string | null;
+}
+
+export interface InventoryStats {
+  totalModels: number;
+  totalComponents: number;
+  totalOnHand: number;
+  totalReserved: number;
+  totalOnOrder: number;
+  totalAvailable: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+}
+
+export interface ModelInventoryRow {
+  modelId: number;
+  modelName: string;
+  componentCount: number;
+  onHand: number;
+  available: number;
+}
+
+export interface StatusCount {
+  /** One of "available", "low", "out" */
+  status: string;
+  count: number;
+}
+
+export interface ActivityRow {
+  componentId: number;
+  code: string;
+  description: string;
+  partNumber: string;
+  modelName: string;
+  updatedAt: string;
+}

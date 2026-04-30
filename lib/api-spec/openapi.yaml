@@ -10,6 +10,14 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: Storage
+    description: Object storage upload and serving endpoints.
+  - name: models
+    description: 3D models (GLTF) and their metadata
+  - name: components
+    description: Components / parts within a model
+  - name: stats
+    description: Aggregate inventory metrics
 paths:
   /healthz:
     get:
@@ -24,6 +32,307 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+      responses:
+        '200':
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to generate upload URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /models:
+    get:
+      tags: [models]
+      operationId: listModels
+      summary: List all uploaded 3D models
+      responses:
+        '200':
+          description: List of models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Model'
+    post:
+      tags: [models]
+      operationId: createModel
+      summary: Create a new model record from an uploaded GLTF file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateModelRequest'
+      responses:
+        '201':
+          description: Model created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /models/{id}:
+    get:
+      tags: [models]
+      operationId: getModel
+      summary: Get a single model by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    patch:
+      tags: [models]
+      operationId: updateModel
+      summary: Update model metadata
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateModelRequest'
+      responses:
+        '200':
+          description: Updated model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      tags: [models]
+      operationId: deleteModel
+      summary: Delete a model and all of its components
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /models/{id}/components:
+    get:
+      tags: [components]
+      operationId: listComponents
+      summary: List components for a model
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Components
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Component'
+    post:
+      tags: [components]
+      operationId: createComponent
+      summary: Create a new component on a model
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateComponentRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Component'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /components/{componentId}:
+    patch:
+      tags: [components]
+      operationId: updateComponent
+      summary: Update a component
+      parameters:
+        - name: componentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateComponentRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Component'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      tags: [components]
+      operationId: deleteComponent
+      summary: Delete a component
+      parameters:
+        - name: componentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /stats/inventory:
+    get:
+      tags: [stats]
+      operationId: getInventoryStats
+      summary: Aggregate inventory metrics across all components
+      responses:
+        '200':
+          description: Aggregate inventory metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryStats'
+
+  /stats/by-model:
+    get:
+      tags: [stats]
+      operationId: getInventoryByModel
+      summary: Per-model inventory totals (component count, on hand, available)
+      responses:
+        '200':
+          description: Per model rollup
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelInventoryRow'
+
+  /stats/by-status:
+    get:
+      tags: [stats]
+      operationId: getComponentsByStatus
+      summary: Component count grouped by stock status
+      responses:
+        '200':
+          description: Status breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StatusCount'
+
+  /stats/recent-activity:
+    get:
+      tags: [stats]
+      operationId: getRecentActivity
+      summary: Most recently created or updated components
+      responses:
+        '200':
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActivityRow'
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +343,352 @@ components:
       required:
         - status
 
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        size:
+          type: integer
+          minimum: 1
+        contentType:
+          type: string
+          minLength: 1
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          format: uri
+        objectPath:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/UploadUrlRequest'
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    Model:
+      type: object
+      required:
+        - id
+        - name
+        - objectPath
+        - createdAt
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        projectName:
+          type: string
+          nullable: true
+        modelName:
+          type: string
+          nullable: true
+        serialNumber:
+          type: string
+          nullable: true
+        revision:
+          type: string
+          nullable: true
+        objectPath:
+          type: string
+          description: Path to the GLTF file in object storage (e.g. /objects/uploads/uuid)
+        fileName:
+          type: string
+          nullable: true
+        fileSize:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateModelRequest:
+      type: object
+      required: [name, objectPath]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        projectName:
+          type: string
+          nullable: true
+        modelName:
+          type: string
+          nullable: true
+        serialNumber:
+          type: string
+          nullable: true
+        revision:
+          type: string
+          nullable: true
+        objectPath:
+          type: string
+          minLength: 1
+        fileName:
+          type: string
+          nullable: true
+        fileSize:
+          type: integer
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    UpdateModelRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        projectName:
+          type: string
+          nullable: true
+        modelName:
+          type: string
+          nullable: true
+        serialNumber:
+          type: string
+          nullable: true
+        revision:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    Component:
+      type: object
+      required:
+        - id
+        - modelId
+        - code
+        - description
+        - partNumber
+        - createdAt
+      properties:
+        id:
+          type: integer
+        modelId:
+          type: integer
+        code:
+          type: string
+          description: Short identifier shown as a tag in the viewer (e.g. CYL-01)
+        description:
+          type: string
+        partNumber:
+          type: string
+        manufacturer:
+          type: string
+          nullable: true
+        weightKg:
+          type: number
+          nullable: true
+        connectionType:
+          type: string
+          nullable: true
+        wrenchSize:
+          type: string
+          nullable: true
+        lengthMm:
+          type: number
+          nullable: true
+        toolsRequired:
+          type: string
+          nullable: true
+        toolSize:
+          type: string
+          nullable: true
+        onHand:
+          type: integer
+          default: 0
+        reserved:
+          type: integer
+          default: 0
+        onOrder:
+          type: integer
+          default: 0
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateComponentRequest:
+      type: object
+      required: [code, description, partNumber]
+      properties:
+        code:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        partNumber:
+          type: string
+          minLength: 1
+        manufacturer:
+          type: string
+          nullable: true
+        weightKg:
+          type: number
+          nullable: true
+        connectionType:
+          type: string
+          nullable: true
+        wrenchSize:
+          type: string
+          nullable: true
+        lengthMm:
+          type: number
+          nullable: true
+        toolsRequired:
+          type: string
+          nullable: true
+        toolSize:
+          type: string
+          nullable: true
+        onHand:
+          type: integer
+          minimum: 0
+          default: 0
+        reserved:
+          type: integer
+          minimum: 0
+          default: 0
+        onOrder:
+          type: integer
+          minimum: 0
+          default: 0
+        notes:
+          type: string
+          nullable: true
+
+    UpdateComponentRequest:
+      type: object
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+        partNumber:
+          type: string
+        manufacturer:
+          type: string
+          nullable: true
+        weightKg:
+          type: number
+          nullable: true
+        connectionType:
+          type: string
+          nullable: true
+        wrenchSize:
+          type: string
+          nullable: true
+        lengthMm:
+          type: number
+          nullable: true
+        toolsRequired:
+          type: string
+          nullable: true
+        toolSize:
+          type: string
+          nullable: true
+        onHand:
+          type: integer
+          minimum: 0
+        reserved:
+          type: integer
+          minimum: 0
+        onOrder:
+          type: integer
+          minimum: 0
+        notes:
+          type: string
+          nullable: true
+
+    InventoryStats:
+      type: object
+      required:
+        - totalModels
+        - totalComponents
+        - totalOnHand
+        - totalReserved
+        - totalOnOrder
+        - totalAvailable
+        - lowStockCount
+        - outOfStockCount
+      properties:
+        totalModels:
+          type: integer
+        totalComponents:
+          type: integer
+        totalOnHand:
+          type: integer
+        totalReserved:
+          type: integer
+        totalOnOrder:
+          type: integer
+        totalAvailable:
+          type: integer
+        lowStockCount:
+          type: integer
+        outOfStockCount:
+          type: integer
+
+    ModelInventoryRow:
+      type: object
+      required: [modelId, modelName, componentCount, onHand, available]
+      properties:
+        modelId:
+          type: integer
+        modelName:
+          type: string
+        componentCount:
+          type: integer
+        onHand:
+          type: integer
+        available:
+          type: integer
+
+    StatusCount:
+      type: object
+      required: [status, count]
+      properties:
+        status:
+          type: string
+          description: One of "available", "low", "out"
+        count:
+          type: integer
+
+    ActivityRow:
+      type: object
+      required: [componentId, code, description, partNumber, modelName, updatedAt]
+      properties:
+        componentId:
+          type: integer
+        code:
+          type: string
+        description:
+          type: string
+        partNumber:
+          type: string
+        modelName:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time

@@ -6,4 +6,17 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./activityRow";
+export * from "./component";
+export * from "./createComponentRequest";
+export * from "./createModelRequest";
+export * from "./errorEnvelope";
 export * from "./healthStatus";
+export * from "./inventoryStats";
+export * from "./model";
+export * from "./modelInventoryRow";
+export * from "./statusCount";
+export * from "./updateComponentRequest";
+export * from "./updateModelRequest";
+export * from "./uploadUrlRequest";
+export * from "./uploadUrlResponse";

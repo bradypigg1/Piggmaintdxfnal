@@ -14,3 +14,324 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary Request a presigned URL for file upload
+ */
+
+export const RequestUploadUrlBody = zod.object({
+  name: zod.string().min(1),
+  size: zod.number().min(1),
+  contentType: zod.string().min(1),
+});
+
+export const RequestUploadUrlResponse = zod.object({
+  uploadURL: zod.string().url(),
+  objectPath: zod.string(),
+  metadata: zod
+    .object({
+      name: zod.string().min(1),
+      size: zod.number().min(1),
+      contentType: zod.string().min(1),
+    })
+    .optional(),
+});
+
+/**
+ * @summary List all uploaded 3D models
+ */
+export const ListModelsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  projectName: zod.string().nullish(),
+  modelName: zod.string().nullish(),
+  serialNumber: zod.string().nullish(),
+  revision: zod.string().nullish(),
+  objectPath: zod
+    .string()
+    .describe(
+      "Path to the GLTF file in object storage (e.g. \/objects\/uploads\/uuid)",
+    ),
+  fileName: zod.string().nullish(),
+  fileSize: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListModelsResponse = zod.array(ListModelsResponseItem);
+
+/**
+ * @summary Create a new model record from an uploaded GLTF file
+ */
+
+export const CreateModelBody = zod.object({
+  name: zod.string().min(1),
+  projectName: zod.string().nullish(),
+  modelName: zod.string().nullish(),
+  serialNumber: zod.string().nullish(),
+  revision: zod.string().nullish(),
+  objectPath: zod.string().min(1),
+  fileName: zod.string().nullish(),
+  fileSize: zod.number().nullish(),
+  notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Get a single model by id
+ */
+export const GetModelParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetModelResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  projectName: zod.string().nullish(),
+  modelName: zod.string().nullish(),
+  serialNumber: zod.string().nullish(),
+  revision: zod.string().nullish(),
+  objectPath: zod
+    .string()
+    .describe(
+      "Path to the GLTF file in object storage (e.g. \/objects\/uploads\/uuid)",
+    ),
+  fileName: zod.string().nullish(),
+  fileSize: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update model metadata
+ */
+export const UpdateModelParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateModelBody = zod.object({
+  name: zod.string().optional(),
+  projectName: zod.string().nullish(),
+  modelName: zod.string().nullish(),
+  serialNumber: zod.string().nullish(),
+  revision: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateModelResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  projectName: zod.string().nullish(),
+  modelName: zod.string().nullish(),
+  serialNumber: zod.string().nullish(),
+  revision: zod.string().nullish(),
+  objectPath: zod
+    .string()
+    .describe(
+      "Path to the GLTF file in object storage (e.g. \/objects\/uploads\/uuid)",
+    ),
+  fileName: zod.string().nullish(),
+  fileSize: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a model and all of its components
+ */
+export const DeleteModelParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List components for a model
+ */
+export const ListComponentsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const listComponentsResponseOnHandDefault = 0;
+export const listComponentsResponseReservedDefault = 0;
+export const listComponentsResponseOnOrderDefault = 0;
+
+export const ListComponentsResponseItem = zod.object({
+  id: zod.number(),
+  modelId: zod.number(),
+  code: zod
+    .string()
+    .describe("Short identifier shown as a tag in the viewer (e.g. CYL-01)"),
+  description: zod.string(),
+  partNumber: zod.string(),
+  manufacturer: zod.string().nullish(),
+  weightKg: zod.number().nullish(),
+  connectionType: zod.string().nullish(),
+  wrenchSize: zod.string().nullish(),
+  lengthMm: zod.number().nullish(),
+  toolsRequired: zod.string().nullish(),
+  toolSize: zod.string().nullish(),
+  onHand: zod.number().default(listComponentsResponseOnHandDefault),
+  reserved: zod.number().default(listComponentsResponseReservedDefault),
+  onOrder: zod.number().default(listComponentsResponseOnOrderDefault),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date().optional(),
+});
+export const ListComponentsResponse = zod.array(ListComponentsResponseItem);
+
+/**
+ * @summary Create a new component on a model
+ */
+export const CreateComponentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const createComponentBodyOnHandDefault = 0;
+export const createComponentBodyOnHandMin = 0;
+
+export const createComponentBodyReservedDefault = 0;
+export const createComponentBodyReservedMin = 0;
+
+export const createComponentBodyOnOrderDefault = 0;
+export const createComponentBodyOnOrderMin = 0;
+
+export const CreateComponentBody = zod.object({
+  code: zod.string().min(1),
+  description: zod.string().min(1),
+  partNumber: zod.string().min(1),
+  manufacturer: zod.string().nullish(),
+  weightKg: zod.number().nullish(),
+  connectionType: zod.string().nullish(),
+  wrenchSize: zod.string().nullish(),
+  lengthMm: zod.number().nullish(),
+  toolsRequired: zod.string().nullish(),
+  toolSize: zod.string().nullish(),
+  onHand: zod
+    .number()
+    .min(createComponentBodyOnHandMin)
+    .default(createComponentBodyOnHandDefault),
+  reserved: zod
+    .number()
+    .min(createComponentBodyReservedMin)
+    .default(createComponentBodyReservedDefault),
+  onOrder: zod
+    .number()
+    .min(createComponentBodyOnOrderMin)
+    .default(createComponentBodyOnOrderDefault),
+  notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Update a component
+ */
+export const UpdateComponentParams = zod.object({
+  componentId: zod.coerce.number(),
+});
+
+export const updateComponentBodyOnHandMin = 0;
+
+export const updateComponentBodyReservedMin = 0;
+
+export const updateComponentBodyOnOrderMin = 0;
+
+export const UpdateComponentBody = zod.object({
+  code: zod.string().optional(),
+  description: zod.string().optional(),
+  partNumber: zod.string().optional(),
+  manufacturer: zod.string().nullish(),
+  weightKg: zod.number().nullish(),
+  connectionType: zod.string().nullish(),
+  wrenchSize: zod.string().nullish(),
+  lengthMm: zod.number().nullish(),
+  toolsRequired: zod.string().nullish(),
+  toolSize: zod.string().nullish(),
+  onHand: zod.number().min(updateComponentBodyOnHandMin).optional(),
+  reserved: zod.number().min(updateComponentBodyReservedMin).optional(),
+  onOrder: zod.number().min(updateComponentBodyOnOrderMin).optional(),
+  notes: zod.string().nullish(),
+});
+
+export const updateComponentResponseOnHandDefault = 0;
+export const updateComponentResponseReservedDefault = 0;
+export const updateComponentResponseOnOrderDefault = 0;
+
+export const UpdateComponentResponse = zod.object({
+  id: zod.number(),
+  modelId: zod.number(),
+  code: zod
+    .string()
+    .describe("Short identifier shown as a tag in the viewer (e.g. CYL-01)"),
+  description: zod.string(),
+  partNumber: zod.string(),
+  manufacturer: zod.string().nullish(),
+  weightKg: zod.number().nullish(),
+  connectionType: zod.string().nullish(),
+  wrenchSize: zod.string().nullish(),
+  lengthMm: zod.number().nullish(),
+  toolsRequired: zod.string().nullish(),
+  toolSize: zod.string().nullish(),
+  onHand: zod.number().default(updateComponentResponseOnHandDefault),
+  reserved: zod.number().default(updateComponentResponseReservedDefault),
+  onOrder: zod.number().default(updateComponentResponseOnOrderDefault),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date().optional(),
+});
+
+/**
+ * @summary Delete a component
+ */
+export const DeleteComponentParams = zod.object({
+  componentId: zod.coerce.number(),
+});
+
+/**
+ * @summary Aggregate inventory metrics across all components
+ */
+export const GetInventoryStatsResponse = zod.object({
+  totalModels: zod.number(),
+  totalComponents: zod.number(),
+  totalOnHand: zod.number(),
+  totalReserved: zod.number(),
+  totalOnOrder: zod.number(),
+  totalAvailable: zod.number(),
+  lowStockCount: zod.number(),
+  outOfStockCount: zod.number(),
+});
+
+/**
+ * @summary Per-model inventory totals (component count, on hand, available)
+ */
+export const GetInventoryByModelResponseItem = zod.object({
+  modelId: zod.number(),
+  modelName: zod.string(),
+  componentCount: zod.number(),
+  onHand: zod.number(),
+  available: zod.number(),
+});
+export const GetInventoryByModelResponse = zod.array(
+  GetInventoryByModelResponseItem,
+);
+
+/**
+ * @summary Component count grouped by stock status
+ */
+export const GetComponentsByStatusResponseItem = zod.object({
+  status: zod.string().describe('One of \"available\", \"low\", \"out\"'),
+  count: zod.number(),
+});
+export const GetComponentsByStatusResponse = zod.array(
+  GetComponentsByStatusResponseItem,
+);
+
+/**
+ * @summary Most recently created or updated components
+ */
+export const GetRecentActivityResponseItem = zod.object({
+  componentId: zod.number(),
+  code: zod.string(),
+  description: zod.string(),
+  partNumber: zod.string(),
+  modelName: zod.string(),
+  updatedAt: zod.coerce.date(),
+});
+export const GetRecentActivityResponse = zod.array(
+  GetRecentActivityResponseItem,
+);
