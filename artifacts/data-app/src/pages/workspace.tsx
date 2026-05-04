@@ -23,6 +23,7 @@ import { UploadDialog } from "@/components/upload-dialog";
 import { ComponentForm } from "@/components/component-form";
 import { ViewerErrorBoundary } from "@/components/viewer-error-boundary";
 import { ModelViewer } from "@/components/model-viewer";
+import { useAutoRotate } from "@/hooks/use-app-settings";
 import { useSelectedModel } from "@/hooks/use-selected-model";
 
 // Helper for status colors
@@ -50,6 +51,7 @@ export default function Workspace() {
   const [pendingMeshName, setPendingMeshName] = useState<string | null>(null);
   const [editingComponent, setEditingComponent] = useState<Component | null>(null);
   const [explodeFactor, setExplodeFactor] = useState<number>(0);
+  const [autoRotate] = useAutoRotate();
   // Reset the explode slider whenever the user switches to a different model
   // so it always loads in its assembled state.
   useEffect(() => {
@@ -310,7 +312,7 @@ export default function Workspace() {
                     )}
                   </Stage>
                 </Suspense>
-                <OrbitControls makeDefault />
+                <OrbitControls makeDefault autoRotate={autoRotate} autoRotateSpeed={0.6} />
               </Canvas>
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 bg-card/90 backdrop-blur border border-border px-4 py-2 shadow-lg pointer-events-auto">
                 <span className="text-[10px] font-mono tracking-widest text-primary">EXPLODE</span>

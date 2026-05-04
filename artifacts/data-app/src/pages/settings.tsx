@@ -4,9 +4,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Settings as SettingsIcon, Database, Moon, Sun, Monitor } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAutoRotate } from "@/hooks/use-app-settings";
 
 export default function Settings() {
   const { toast } = useToast();
+  const [autoRotate, setAutoRotate] = useAutoRotate();
 
   const handleSeedData = () => {
     toast({
@@ -68,7 +70,11 @@ export default function Settings() {
                   <Label className="text-sm font-mono">Auto-rotate 3D Models</Label>
                   <p className="text-xs font-mono text-muted-foreground">Slowly spin models when idle</p>
                 </div>
-                <Switch />
+                <Switch
+                  checked={autoRotate}
+                  onCheckedChange={setAutoRotate}
+                  data-testid="switch-auto-rotate"
+                />
               </div>
             </CardContent>
           </Card>
