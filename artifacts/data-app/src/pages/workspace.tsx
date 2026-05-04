@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   useListComponents, 
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { UploadDialog } from "@/components/upload-dialog";
 import { ComponentForm } from "@/components/component-form";
 import { ViewerErrorBoundary } from "@/components/viewer-error-boundary";
@@ -48,6 +49,12 @@ export default function Workspace() {
   const [componentFormOpen, setComponentFormOpen] = useState(false);
   const [pendingMeshName, setPendingMeshName] = useState<string | null>(null);
   const [editingComponent, setEditingComponent] = useState<Component | null>(null);
+  const [explodeFactor, setExplodeFactor] = useState<number>(0);
+  // Reset the explode slider whenever the user switches to a different model
+  // so it always loads in its assembled state.
+  useEffect(() => {
+    setExplodeFactor(0);
+  }, [modelId]);
   // The mesh that was just clicked but not yet linked to a component.
   // Highlighted in yellow with a confirm prompt so the user can verify
   // what they selected before opening the form.
@@ -298,12 +305,39 @@ export default function Workspace() {
                         previewMeshName={previewMeshName}
                         taggedMeshNames={taggedMeshNames}
                         onMeshClick={handleMeshClick}
+                        explodeFactor={explodeFactor}
                       />
                     )}
                   </Stage>
                 </Suspense>
                 <OrbitControls makeDefault />
               </Canvas>
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 bg-card/90 backdrop-blur border border-border px-4 py-2 shadow-lg pointer-events-auto">
+                <span className="text-[10px] font-mono tracking-widest text-primary">EXPLODE</span>
+                <Slider
+                  value={[explodeFactor]}
+                  onValueChange={(v) => setExplodeFactor(v[0] ?? 0)}
+                  min={0}
+                  max={2}
+                  step={0.01}
+                  className="w-56"
+                  data-testid="slider-explode"
+                />
+                <span className="text-[10px] font-mono tabular-nums text-muted-foreground w-8 text-right">
+                  {Math.round(explodeFactor * 100)}%
+                </span>
+                {explodeFactor > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 rounded-none font-mono text-[10px] text-muted-foreground hover:text-primary hover:bg-transparent"
+                    onClick={() => setExplodeFactor(0)}
+                    data-testid="button-reset-explode"
+                  >
+                    RESET
+                  </Button>
+                )}
+              </div>
             </ViewerErrorBoundary>
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_center,#111_0%,#000_100%)]">

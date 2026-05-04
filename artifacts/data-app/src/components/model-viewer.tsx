@@ -9,6 +9,18 @@ interface ModelViewerProps {
   previewMeshName: string | null;
   taggedMeshNames: Set<string>;
   onMeshClick: (meshName: string) => void;
+  /**
+   * 0 = fully assembled, 1 = fully exploded. Each top-level part is pushed
+   * outward from the model's bounding-box center along the vector to its own
+   * center. Common CAD-viewer behavior.
+   */
+  explodeFactor?: number;
+}
+
+interface ExplodePart {
+  obj: THREE.Object3D;
+  originalPos: THREE.Vector3;
+  offsetDir: THREE.Vector3; // direction * distance from scene center, in parent-local space
 }
 
 const HIGHLIGHT_COLOR = new THREE.Color("#ff6a00");
@@ -40,6 +52,7 @@ export function ModelViewer({
   previewMeshName,
   taggedMeshNames,
   onMeshClick,
+  explodeFactor = 0,
 }: ModelViewerProps) {
   const { scene } = useGLTF(url);
 
@@ -100,6 +113,69 @@ export function ModelViewer({
     });
     originalsRef.current = map;
   }, [clonedScene]);
+
+  // Compute explode parts when the cloned scene changes. We pick the first
+  // tree level that has multiple children (collapsing single-child chains)
+  // so a model wrapped in one root group still explodes meaningfully.
+  const explodePartsRef = useRef<ExplodePart[]>([]);
+  useEffect(() => {
+    const sceneBox = new THREE.Box3().setFromObject(clonedScene);
+    const sceneCenter = sceneBox.getCenter(new THREE.Vector3());
+
+    let level: THREE.Object3D = clonedScene;
+    while (level.children.length === 1) {
+      level = level.children[0];
+    }
+
+    const targets = level.children.filter((c) => {
+      let hasMesh = false;
+      c.traverse((o) => {
+        if ((o as THREE.Mesh).isMesh) hasMesh = true;
+      });
+      return hasMesh;
+    });
+
+    const parts: ExplodePart[] = targets.map((obj) => {
+      const box = new THREE.Box3().setFromObject(obj);
+      const childCenterWorld = box.getCenter(new THREE.Vector3());
+
+      // obj.position is in parent-local space. Convert both centers to that
+      // same space so the direction we add to obj.position has the correct
+      // basis even when an ancestor has rotation or non-unit scale (common
+      // in CAD GLTF exports). worldToLocal mutates its arg, so clone first.
+      const parent = obj.parent ?? clonedScene;
+      const childCenterLocal = parent.worldToLocal(childCenterWorld.clone());
+      const sceneCenterLocal = parent.worldToLocal(sceneCenter.clone());
+      const offsetDir = childCenterLocal.sub(sceneCenterLocal);
+
+      // If a part sits exactly at the centroid, push it gently up so the
+      // user can still see it separate from neighbors.
+      if (offsetDir.length() < 0.001) {
+        offsetDir.set(0, 1, 0).multiplyScalar(0.25);
+      }
+      return {
+        obj,
+        originalPos: obj.position.clone(),
+        offsetDir,
+      };
+    });
+
+    explodePartsRef.current = parts;
+
+    return () => {
+      // Restore positions on unmount or before recomputing for a new scene.
+      parts.forEach((p) => p.obj.position.copy(p.originalPos));
+    };
+  }, [clonedScene]);
+
+  // Re-apply explode translation whenever the factor changes. Multiplier
+  // controls how aggressively parts spread; 1.0 already moves a part its
+  // own bbox-distance away from center.
+  useEffect(() => {
+    explodePartsRef.current.forEach(({ obj, originalPos, offsetDir }) => {
+      obj.position.copy(originalPos).addScaledVector(offsetDir, explodeFactor);
+    });
+  }, [explodeFactor, clonedScene]);
 
   // Apply highlight to the selected mesh and a softer tint to tagged meshes.
   useEffect(() => {
