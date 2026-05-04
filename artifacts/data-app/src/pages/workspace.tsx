@@ -12,7 +12,8 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stage } from "@react-three/drei";
 import { 
   Upload, Home, Maximize, RefreshCw, 
-  Box, Ruler, Plus, Search, Edit, MousePointer2, X
+  Box, Ruler, Plus, Search, Edit, MousePointer2, X,
+  ChevronDown, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -52,6 +53,7 @@ export default function Workspace() {
   const [editingComponent, setEditingComponent] = useState<Component | null>(null);
   const [explodeFactor, setExplodeFactor] = useState<number>(0);
   const [autoRotate] = useAutoRotate();
+  const [serviceInfoCollapsed, setServiceInfoCollapsed] = useState<boolean>(false);
   // Reset the explode slider whenever the user switches to a different model
   // so it always loads in its assembled state.
   useEffect(() => {
@@ -420,45 +422,111 @@ export default function Workspace() {
         </div>
 
         {/* Right Panel - Service Info */}
-        <div className="w-[320px] border-l border-border bg-sidebar flex flex-col shrink-0">
-          <div className="h-10 border-b border-border bg-card flex items-center px-4 shrink-0">
-            <h2 className="text-[10px] font-bold tracking-widest font-mono">SERVICE & REPLACEMENT</h2>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {components.map(comp => {
-              const isSelected = comp.id === componentId;
-              return (
-                <div 
-                  key={comp.id}
-                  className={`border p-3 cursor-pointer transition-colors ${isSelected ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-muted-foreground/30'}`}
-                  onClick={() => updateUrl(modelId, comp.id)}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className={`font-mono text-sm font-bold ${isSelected ? 'text-primary' : ''}`}>{comp.code}</span>
-                    <StatusBadge onHand={comp.onHand} reserved={comp.reserved} />
-                  </div>
-                  
-                  <div className="font-mono text-xs text-muted-foreground truncate mb-3">
-                    {comp.description}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 font-mono text-[10px]">
-                    <div className="text-muted-foreground">TYPE</div><div className="text-right truncate">{comp.connectionType || '-'}</div>
-                    <div className="text-muted-foreground">WRENCH</div><div className="text-right truncate">{comp.wrenchSize || '-'}</div>
-                    <div className="text-muted-foreground">LENGTH</div><div className="text-right">{comp.lengthMm ? `${comp.lengthMm}mm` : '-'}</div>
-                    <div className="text-muted-foreground">PART</div><div className="text-right truncate text-foreground">{comp.partNumber}</div>
-                  </div>
-                </div>
-              );
-            })}
-            
-            {model && components.length === 0 && (
-              <div className="text-center font-mono py-8 border border-dashed border-border text-muted-foreground text-xs">
-                NO COMPONENTS ADDED
-              </div>
+        <div className="w-[360px] border-l border-border bg-sidebar flex flex-col shrink-0">
+          <button
+            type="button"
+            onClick={() => setServiceInfoCollapsed((c) => !c)}
+            aria-expanded={!serviceInfoCollapsed}
+            aria-controls="service-info-list"
+            className="h-11 border-b border-border bg-card flex items-center justify-between px-4 shrink-0 hover:bg-card/80 transition-colors text-left"
+            data-testid="button-toggle-service-info"
+          >
+            <h2 className="text-xs font-bold tracking-widest font-mono text-foreground">
+              SERVICE &amp; REPLACEMENT INFO
+            </h2>
+            {serviceInfoCollapsed ? (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             )}
-          </div>
+          </button>
+
+          {!serviceInfoCollapsed && (
+            <div id="service-info-list" className="flex-1 overflow-y-auto p-3 space-y-3">
+              {components.map((comp) => {
+                const isSelected = comp.id === componentId;
+                const info = getStatusInfo(comp.onHand, comp.reserved);
+                const invColor =
+                  info.label === "OUT"
+                    ? "text-destructive"
+                    : info.label === "LOW"
+                    ? "text-[hsl(var(--status-low))]"
+                    : "text-[hsl(var(--status-available))]";
+                const hasReplacementTools = !!(comp.toolsRequired || comp.toolSize);
+                // Hide the inline Replacement Tools row from the main field list
+                // when shown as the dedicated section above.
+                const fieldRows: Array<{ label: string; value: string | null }> = [
+                  { label: "Connection Type", value: comp.connectionType || null },
+                  { label: "Wrench Size", value: comp.wrenchSize || null },
+                  { label: "Length", value: comp.lengthMm ? `${comp.lengthMm} mm` : null },
+                  { label: "Part Number", value: comp.partNumber || null },
+                ];
+
+                return (
+                  <div
+                    key={comp.id}
+                    className={`border bg-card p-4 cursor-pointer transition-colors ${
+                      isSelected
+                        ? "border-primary"
+                        : "border-border hover:border-muted-foreground/40"
+                    }`}
+                    onClick={() => updateUrl(modelId, comp.id)}
+                    data-testid={`card-service-info-${comp.id}`}
+                  >
+                    <div
+                      className={`font-mono text-sm font-bold mb-3 ${
+                        isSelected ? "text-primary" : "text-foreground"
+                      }`}
+                    >
+                      {comp.code} – {comp.description?.toUpperCase()}
+                    </div>
+
+                    {hasReplacementTools && (
+                      <div className="mb-3">
+                        <div className="font-mono text-xs text-foreground mb-2">
+                          Replacement Tools
+                        </div>
+                        <div className="flex justify-between items-center font-mono text-xs pl-1">
+                          <span className="text-muted-foreground">
+                            <span className="mr-1.5">•</span>
+                            {comp.toolsRequired || "Tool"}
+                          </span>
+                          <span className="text-[#38bdf8]">
+                            {comp.toolSize || "—"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2 font-mono text-xs">
+                      {fieldRows.map((row) =>
+                        row.value ? (
+                          <div key={row.label} className="flex justify-between gap-3">
+                            <span className="text-muted-foreground">{row.label}</span>
+                            <span className="text-[#38bdf8] text-right truncate">
+                              {row.value}
+                            </span>
+                          </div>
+                        ) : null,
+                      )}
+                      <div className="flex justify-between gap-3">
+                        <span className="text-muted-foreground">Inventory</span>
+                        <span className={`${invColor} font-bold`}>
+                          {comp.onHand ?? 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {model && components.length === 0 && (
+                <div className="text-center font-mono py-8 border border-dashed border-border text-muted-foreground text-xs">
+                  NO COMPONENTS ADDED
+                </div>
+              )}
+            </div>
+          )}
           
           {selectedComponent && (
             <div className="h-[200px] border-t border-border bg-card flex flex-col shrink-0">
