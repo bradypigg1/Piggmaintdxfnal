@@ -25,7 +25,6 @@ interface ExplodePart {
 
 const HIGHLIGHT_COLOR = new THREE.Color("#ff6a00");
 const PREVIEW_COLOR = new THREE.Color("#38bdf8");
-const TAGGED_COLOR = new THREE.Color("#3b82f6");
 const NEUTRAL = new THREE.Color("#000000");
 
 interface OriginalMaterialState {
@@ -177,7 +176,11 @@ export function ModelViewer({
     });
   }, [explodeFactor, clonedScene]);
 
-  // Apply highlight to the selected mesh and a softer tint to tagged meshes.
+  // Apply highlight to the selected mesh only. Tagged-but-not-selected meshes
+  // keep their original material color so the assembly looks clean — the user
+  // explicitly asked that the model not change color based on tag/stock state.
+  // Preview tint (the brief sky-blue confirm step before tagging) is kept so
+  // the user can verify what they're about to tag.
   useEffect(() => {
     clonedScene.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
@@ -189,7 +192,6 @@ export function ModelViewer({
         !!selectedMeshName && ancestorName === selectedMeshName;
       const isPreview =
         !!previewMeshName && ancestorName === previewMeshName;
-      const isTagged = !!ancestorName && taggedMeshNames.has(ancestorName);
 
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       mats.forEach((mat, idx) => {
@@ -203,9 +205,6 @@ export function ModelViewer({
         } else if (isPreview) {
           m.emissive.copy(PREVIEW_COLOR);
           m.emissiveIntensity = 0.75;
-        } else if (isTagged) {
-          m.emissive.copy(TAGGED_COLOR);
-          m.emissiveIntensity = 0.35;
         } else if (orig) {
           m.emissive.copy(orig.emissive);
           m.emissiveIntensity = orig.emissiveIntensity;
