@@ -39,7 +39,42 @@ export const componentsTable = pgTable("components", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const maintenanceEventsTable = pgTable("maintenance_events", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").references(() => modelsTable.id, {
+    onDelete: "set null",
+  }),
+  title: text("title").notNull(),
+  description: text("description"),
+  scheduledFor: timestamp("scheduled_for", { withTimezone: true }).notNull(),
+  durationHours: doublePrecision("duration_hours"),
+  status: text("status").default("scheduled").notNull(),
+  assignedTo: text("assigned_to"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const pmDocumentsTable = pgTable("pm_documents", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").references(() => modelsTable.id, {
+    onDelete: "set null",
+  }),
+  title: text("title").notNull(),
+  partCode: text("part_code"),
+  objectPath: text("object_path").notNull(),
+  fileName: text("file_name"),
+  fileSize: integer("file_size"),
+  contentType: text("content_type"),
+  notes: text("notes"),
+  uploadedAt: timestamp("uploaded_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 export type Model = typeof modelsTable.$inferSelect;
 export type NewModel = typeof modelsTable.$inferInsert;
 export type Component = typeof componentsTable.$inferSelect;
 export type NewComponent = typeof componentsTable.$inferInsert;
+export type MaintenanceEvent = typeof maintenanceEventsTable.$inferSelect;
+export type NewMaintenanceEvent = typeof maintenanceEventsTable.$inferInsert;
+export type PmDocument = typeof pmDocumentsTable.$inferSelect;
+export type NewPmDocument = typeof pmDocumentsTable.$inferInsert;

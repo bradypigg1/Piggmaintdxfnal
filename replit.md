@@ -28,14 +28,17 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Artifacts
 
-- **api-server** (`/api`) — Express 5 backend with Drizzle ORM, exposes models/components/stats/storage routes.
-- **data-app** (`/`) — "Parts & Inventory 3D Viewer". React + Vite + Tailwind v4. Industrial dark UI with sidebar nav, GLTF 3D viewer (`@react-three/fiber` + `drei`), service/replacement panel, components table, dashboard, parts catalog, inventory, tools, documents, settings. Uses generated React Query hooks from `@workspace/api-client-react`.
+- **api-server** (`/api`) — Express 5 backend with Drizzle ORM, exposes models/components/stats/storage/maintenance routes.
+- **data-app** (`/`) — "Parts & Inventory 3D Viewer". React + Vite + Tailwind v4. Industrial dark UI with sidebar nav, GLTF 3D viewer (`@react-three/fiber` + `drei`), service/replacement panel, components table, dashboard, parts catalog, inventory, tools, maintenance calendar + PM documents, documents, settings. Uses generated React Query hooks from `@workspace/api-client-react`.
 - **mockup-sandbox** (`/__mockup`) — design exploration sandbox.
 
 ## Domain
 
 - `models` table: GLTF model metadata (projectName, modelName, serialNumber, revision, objectPath).
 - `components` table: parts on a model with code, partNumber, meshName, manufacturer, weightKg, connectionType, wrenchSize, lengthMm, toolsRequired, toolSize, qtyRequired (integer, default 1), onHand, reserved, onOrder, notes. `meshName` links a component to a named node in the GLTF scene; the API normalizes blank strings to NULL on create/update.
+- `maintenance_events` table: scheduled preventive-maintenance tasks with title, scheduledFor (timestamptz, stored as UTC instant — UI picks local date+time and converts via `toISOString()`), durationHours, status (`scheduled` | `completed` | `overdue`, enforced as enum in OpenAPI/zod), assignedTo, notes, optional `modelId` FK with `ON DELETE SET NULL`.
+- `pm_documents` table: uploaded Preventive Maintenance reference files. Title, optional modelId/partCode, objectPath (presigned-URL upload via existing `/storage/uploads/request-url`), fileName, fileSize, contentType, notes. Download via `/api/storage{objectPath}`.
+- Maintenance page (`/maintenance`): custom date-fns month grid (Sunday-aligned weeks) with event chips per day, prev/next/TODAY nav, click empty day → schedule dialog pre-filled to that date, click chip → edit dialog (with delete). Day cells are `role="gridcell" tabIndex={0}` (Enter/Space) and chips are real `<button>`s — no nested interactives. Right-side UPCOMING sidebar shows the next 8 future events; overdue scheduled items are auto-styled red. PM upload dialog enforces a safe-filename regex before requesting an upload URL.
 - Status derivation (client): `available = onHand - reserved`; `<=0 OUT`, `<=2 LOW`, else AVAILABLE.
 - GLTF upload: request presigned URL → PUT to GCS → POST `/api/models` with `objectPath` → load via `useGLTF("/api/storage" + objectPath)`.
 

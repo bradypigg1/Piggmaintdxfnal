@@ -175,6 +175,96 @@ export interface StatusCount {
   count: number;
 }
 
+export type MaintenanceEventStatus =
+  (typeof MaintenanceEventStatus)[keyof typeof MaintenanceEventStatus];
+
+export const MaintenanceEventStatus = {
+  scheduled: "scheduled",
+  completed: "completed",
+  overdue: "overdue",
+} as const;
+
+export interface MaintenanceEvent {
+  id: number;
+  modelId?: number | null;
+  title: string;
+  description?: string | null;
+  scheduledFor: string;
+  durationHours?: number | null;
+  status: MaintenanceEventStatus;
+  assignedTo?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateMaintenanceEventRequestStatus =
+  (typeof CreateMaintenanceEventRequestStatus)[keyof typeof CreateMaintenanceEventRequestStatus];
+
+export const CreateMaintenanceEventRequestStatus = {
+  scheduled: "scheduled",
+  completed: "completed",
+  overdue: "overdue",
+} as const;
+
+export interface CreateMaintenanceEventRequest {
+  modelId?: number | null;
+  /** @minLength 1 */
+  title: string;
+  description?: string | null;
+  scheduledFor: string;
+  durationHours?: number | null;
+  status?: CreateMaintenanceEventRequestStatus;
+  assignedTo?: string | null;
+  notes?: string | null;
+}
+
+export type UpdateMaintenanceEventRequestStatus =
+  (typeof UpdateMaintenanceEventRequestStatus)[keyof typeof UpdateMaintenanceEventRequestStatus];
+
+export const UpdateMaintenanceEventRequestStatus = {
+  scheduled: "scheduled",
+  completed: "completed",
+  overdue: "overdue",
+} as const;
+
+export interface UpdateMaintenanceEventRequest {
+  modelId?: number | null;
+  title?: string;
+  description?: string | null;
+  scheduledFor?: string;
+  durationHours?: number | null;
+  status?: UpdateMaintenanceEventRequestStatus;
+  assignedTo?: string | null;
+  notes?: string | null;
+}
+
+export interface PmDocument {
+  id: number;
+  modelId?: number | null;
+  title: string;
+  partCode?: string | null;
+  objectPath: string;
+  fileName?: string | null;
+  fileSize?: number | null;
+  contentType?: string | null;
+  notes?: string | null;
+  uploadedAt: string;
+}
+
+export interface CreatePmDocumentRequest {
+  modelId?: number | null;
+  /** @minLength 1 */
+  title: string;
+  partCode?: string | null;
+  /** @minLength 1 */
+  objectPath: string;
+  fileName?: string | null;
+  fileSize?: number | null;
+  contentType?: string | null;
+  notes?: string | null;
+}
+
 export interface ActivityRow {
   componentId: number;
   code: string;

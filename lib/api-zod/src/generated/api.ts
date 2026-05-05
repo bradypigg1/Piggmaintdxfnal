@@ -378,6 +378,119 @@ export const GetComponentsByStatusResponse = zod.array(
 );
 
 /**
+ * @summary List all scheduled maintenance events
+ */
+export const ListMaintenanceEventsResponseItem = zod.object({
+  id: zod.number(),
+  modelId: zod.number().nullish(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  scheduledFor: zod.coerce.date(),
+  durationHours: zod.number().nullish(),
+  status: zod.enum(["scheduled", "completed", "overdue"]),
+  assignedTo: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+export const ListMaintenanceEventsResponse = zod.array(
+  ListMaintenanceEventsResponseItem,
+);
+
+/**
+ * @summary Schedule a new maintenance event
+ */
+
+export const CreateMaintenanceEventBody = zod.object({
+  modelId: zod.number().nullish(),
+  title: zod.string().min(1),
+  description: zod.string().nullish(),
+  scheduledFor: zod.coerce.date(),
+  durationHours: zod.number().nullish(),
+  status: zod.enum(["scheduled", "completed", "overdue"]).optional(),
+  assignedTo: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Update a scheduled maintenance event
+ */
+export const UpdateMaintenanceEventParams = zod.object({
+  eventId: zod.coerce.number(),
+});
+
+export const UpdateMaintenanceEventBody = zod.object({
+  modelId: zod.number().nullish(),
+  title: zod.string().optional(),
+  description: zod.string().nullish(),
+  scheduledFor: zod.coerce.date().optional(),
+  durationHours: zod.number().nullish(),
+  status: zod.enum(["scheduled", "completed", "overdue"]).optional(),
+  assignedTo: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateMaintenanceEventResponse = zod.object({
+  id: zod.number(),
+  modelId: zod.number().nullish(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  scheduledFor: zod.coerce.date(),
+  durationHours: zod.number().nullish(),
+  status: zod.enum(["scheduled", "completed", "overdue"]),
+  assignedTo: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a scheduled maintenance event
+ */
+export const DeleteMaintenanceEventParams = zod.object({
+  eventId: zod.coerce.number(),
+});
+
+/**
+ * @summary List uploaded Preventive Maintenance (PM) documents
+ */
+export const ListPmDocumentsResponseItem = zod.object({
+  id: zod.number(),
+  modelId: zod.number().nullish(),
+  title: zod.string(),
+  partCode: zod.string().nullish(),
+  objectPath: zod.string(),
+  fileName: zod.string().nullish(),
+  fileSize: zod.number().nullish(),
+  contentType: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  uploadedAt: zod.coerce.date(),
+});
+export const ListPmDocumentsResponse = zod.array(ListPmDocumentsResponseItem);
+
+/**
+ * @summary Register an uploaded PM document
+ */
+
+export const CreatePmDocumentBody = zod.object({
+  modelId: zod.number().nullish(),
+  title: zod.string().min(1),
+  partCode: zod.string().nullish(),
+  objectPath: zod.string().min(1),
+  fileName: zod.string().nullish(),
+  fileSize: zod.number().nullish(),
+  contentType: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Delete a PM document record
+ */
+export const DeletePmDocumentParams = zod.object({
+  pmId: zod.coerce.number(),
+});
+
+/**
  * @summary Most recently created or updated components
  */
 export const GetRecentActivityResponseItem = zod.object({

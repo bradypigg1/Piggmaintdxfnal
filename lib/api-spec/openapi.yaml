@@ -18,6 +18,8 @@ tags:
     description: Components / parts within a model
   - name: stats
     description: Aggregate inventory metrics
+  - name: maintenance
+    description: Scheduled maintenance events and Preventive Maintenance (PM) documents
 paths:
   /healthz:
     get:
@@ -317,6 +319,153 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StatusCount'
+
+  /maintenance/events:
+    get:
+      tags: [maintenance]
+      operationId: listMaintenanceEvents
+      summary: List all scheduled maintenance events
+      responses:
+        '200':
+          description: Maintenance events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaintenanceEvent'
+    post:
+      tags: [maintenance]
+      operationId: createMaintenanceEvent
+      summary: Schedule a new maintenance event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMaintenanceEventRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceEvent'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /maintenance/events/{eventId}:
+    patch:
+      tags: [maintenance]
+      operationId: updateMaintenanceEvent
+      summary: Update a scheduled maintenance event
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMaintenanceEventRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceEvent'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      tags: [maintenance]
+      operationId: deleteMaintenanceEvent
+      summary: Delete a scheduled maintenance event
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /maintenance/pms:
+    get:
+      tags: [maintenance]
+      operationId: listPmDocuments
+      summary: List uploaded Preventive Maintenance (PM) documents
+      responses:
+        '200':
+          description: PM documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PmDocument'
+    post:
+      tags: [maintenance]
+      operationId: createPmDocument
+      summary: Register an uploaded PM document
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePmDocumentRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PmDocument'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /maintenance/pms/{pmId}:
+    delete:
+      tags: [maintenance]
+      operationId: deletePmDocument
+      summary: Delete a PM document record
+      parameters:
+        - name: pmId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
 
   /stats/recent-activity:
     get:
@@ -702,6 +851,159 @@ components:
           description: One of "available", "low", "out"
         count:
           type: integer
+
+    MaintenanceEvent:
+      type: object
+      required: [id, title, scheduledFor, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        modelId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        scheduledFor:
+          type: string
+          format: date-time
+        durationHours:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [scheduled, completed, overdue]
+        assignedTo:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateMaintenanceEventRequest:
+      type: object
+      required: [title, scheduledFor]
+      properties:
+        modelId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          nullable: true
+        scheduledFor:
+          type: string
+          format: date-time
+        durationHours:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [scheduled, completed, overdue]
+        assignedTo:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    UpdateMaintenanceEventRequest:
+      type: object
+      properties:
+        modelId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        scheduledFor:
+          type: string
+          format: date-time
+        durationHours:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [scheduled, completed, overdue]
+        assignedTo:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    PmDocument:
+      type: object
+      required: [id, title, objectPath, uploadedAt]
+      properties:
+        id:
+          type: integer
+        modelId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        partCode:
+          type: string
+          nullable: true
+        objectPath:
+          type: string
+        fileName:
+          type: string
+          nullable: true
+        fileSize:
+          type: integer
+          nullable: true
+        contentType:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        uploadedAt:
+          type: string
+          format: date-time
+
+    CreatePmDocumentRequest:
+      type: object
+      required: [title, objectPath]
+      properties:
+        modelId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+          minLength: 1
+        partCode:
+          type: string
+          nullable: true
+        objectPath:
+          type: string
+          minLength: 1
+        fileName:
+          type: string
+          nullable: true
+        fileSize:
+          type: integer
+          nullable: true
+        contentType:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
 
     ActivityRow:
       type: object

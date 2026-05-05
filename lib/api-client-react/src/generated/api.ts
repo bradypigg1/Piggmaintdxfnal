@@ -20,14 +20,19 @@ import type {
   ActivityRow,
   Component,
   CreateComponentRequest,
+  CreateMaintenanceEventRequest,
   CreateModelRequest,
+  CreatePmDocumentRequest,
   ErrorEnvelope,
   HealthStatus,
   InventoryStats,
+  MaintenanceEvent,
   Model,
   ModelInventoryRow,
+  PmDocument,
   StatusCount,
   UpdateComponentRequest,
+  UpdateMaintenanceEventRequest,
   UpdateModelRequest,
   UploadUrlRequest,
   UploadUrlResponse,
@@ -1188,6 +1193,585 @@ export function useGetComponentsByStatus<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List all scheduled maintenance events
+ */
+export const getListMaintenanceEventsUrl = () => {
+  return `/api/maintenance/events`;
+};
+
+export const listMaintenanceEvents = async (
+  options?: RequestInit,
+): Promise<MaintenanceEvent[]> => {
+  return customFetch<MaintenanceEvent[]>(getListMaintenanceEventsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMaintenanceEventsQueryKey = () => {
+  return [`/api/maintenance/events`] as const;
+};
+
+export const getListMaintenanceEventsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMaintenanceEvents>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMaintenanceEvents>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMaintenanceEventsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMaintenanceEvents>>
+  > = ({ signal }) => listMaintenanceEvents({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMaintenanceEvents>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMaintenanceEventsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMaintenanceEvents>>
+>;
+export type ListMaintenanceEventsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all scheduled maintenance events
+ */
+
+export function useListMaintenanceEvents<
+  TData = Awaited<ReturnType<typeof listMaintenanceEvents>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMaintenanceEvents>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMaintenanceEventsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Schedule a new maintenance event
+ */
+export const getCreateMaintenanceEventUrl = () => {
+  return `/api/maintenance/events`;
+};
+
+export const createMaintenanceEvent = async (
+  createMaintenanceEventRequest: CreateMaintenanceEventRequest,
+  options?: RequestInit,
+): Promise<MaintenanceEvent> => {
+  return customFetch<MaintenanceEvent>(getCreateMaintenanceEventUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createMaintenanceEventRequest),
+  });
+};
+
+export const getCreateMaintenanceEventMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMaintenanceEvent>>,
+    TError,
+    { data: BodyType<CreateMaintenanceEventRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createMaintenanceEvent>>,
+  TError,
+  { data: BodyType<CreateMaintenanceEventRequest> },
+  TContext
+> => {
+  const mutationKey = ["createMaintenanceEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createMaintenanceEvent>>,
+    { data: BodyType<CreateMaintenanceEventRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createMaintenanceEvent(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateMaintenanceEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createMaintenanceEvent>>
+>;
+export type CreateMaintenanceEventMutationBody =
+  BodyType<CreateMaintenanceEventRequest>;
+export type CreateMaintenanceEventMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Schedule a new maintenance event
+ */
+export const useCreateMaintenanceEvent = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMaintenanceEvent>>,
+    TError,
+    { data: BodyType<CreateMaintenanceEventRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createMaintenanceEvent>>,
+  TError,
+  { data: BodyType<CreateMaintenanceEventRequest> },
+  TContext
+> => {
+  return useMutation(getCreateMaintenanceEventMutationOptions(options));
+};
+
+/**
+ * @summary Update a scheduled maintenance event
+ */
+export const getUpdateMaintenanceEventUrl = (eventId: number) => {
+  return `/api/maintenance/events/${eventId}`;
+};
+
+export const updateMaintenanceEvent = async (
+  eventId: number,
+  updateMaintenanceEventRequest: UpdateMaintenanceEventRequest,
+  options?: RequestInit,
+): Promise<MaintenanceEvent> => {
+  return customFetch<MaintenanceEvent>(getUpdateMaintenanceEventUrl(eventId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateMaintenanceEventRequest),
+  });
+};
+
+export const getUpdateMaintenanceEventMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMaintenanceEvent>>,
+    TError,
+    { eventId: number; data: BodyType<UpdateMaintenanceEventRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMaintenanceEvent>>,
+  TError,
+  { eventId: number; data: BodyType<UpdateMaintenanceEventRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateMaintenanceEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMaintenanceEvent>>,
+    { eventId: number; data: BodyType<UpdateMaintenanceEventRequest> }
+  > = (props) => {
+    const { eventId, data } = props ?? {};
+
+    return updateMaintenanceEvent(eventId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMaintenanceEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMaintenanceEvent>>
+>;
+export type UpdateMaintenanceEventMutationBody =
+  BodyType<UpdateMaintenanceEventRequest>;
+export type UpdateMaintenanceEventMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Update a scheduled maintenance event
+ */
+export const useUpdateMaintenanceEvent = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMaintenanceEvent>>,
+    TError,
+    { eventId: number; data: BodyType<UpdateMaintenanceEventRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMaintenanceEvent>>,
+  TError,
+  { eventId: number; data: BodyType<UpdateMaintenanceEventRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateMaintenanceEventMutationOptions(options));
+};
+
+/**
+ * @summary Delete a scheduled maintenance event
+ */
+export const getDeleteMaintenanceEventUrl = (eventId: number) => {
+  return `/api/maintenance/events/${eventId}`;
+};
+
+export const deleteMaintenanceEvent = async (
+  eventId: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteMaintenanceEventUrl(eventId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteMaintenanceEventMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMaintenanceEvent>>,
+    TError,
+    { eventId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteMaintenanceEvent>>,
+  TError,
+  { eventId: number },
+  TContext
+> => {
+  const mutationKey = ["deleteMaintenanceEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteMaintenanceEvent>>,
+    { eventId: number }
+  > = (props) => {
+    const { eventId } = props ?? {};
+
+    return deleteMaintenanceEvent(eventId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteMaintenanceEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteMaintenanceEvent>>
+>;
+
+export type DeleteMaintenanceEventMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Delete a scheduled maintenance event
+ */
+export const useDeleteMaintenanceEvent = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMaintenanceEvent>>,
+    TError,
+    { eventId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteMaintenanceEvent>>,
+  TError,
+  { eventId: number },
+  TContext
+> => {
+  return useMutation(getDeleteMaintenanceEventMutationOptions(options));
+};
+
+/**
+ * @summary List uploaded Preventive Maintenance (PM) documents
+ */
+export const getListPmDocumentsUrl = () => {
+  return `/api/maintenance/pms`;
+};
+
+export const listPmDocuments = async (
+  options?: RequestInit,
+): Promise<PmDocument[]> => {
+  return customFetch<PmDocument[]>(getListPmDocumentsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPmDocumentsQueryKey = () => {
+  return [`/api/maintenance/pms`] as const;
+};
+
+export const getListPmDocumentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPmDocuments>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listPmDocuments>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPmDocumentsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPmDocuments>>> = ({
+    signal,
+  }) => listPmDocuments({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPmDocuments>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPmDocumentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPmDocuments>>
+>;
+export type ListPmDocumentsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List uploaded Preventive Maintenance (PM) documents
+ */
+
+export function useListPmDocuments<
+  TData = Awaited<ReturnType<typeof listPmDocuments>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listPmDocuments>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPmDocumentsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Register an uploaded PM document
+ */
+export const getCreatePmDocumentUrl = () => {
+  return `/api/maintenance/pms`;
+};
+
+export const createPmDocument = async (
+  createPmDocumentRequest: CreatePmDocumentRequest,
+  options?: RequestInit,
+): Promise<PmDocument> => {
+  return customFetch<PmDocument>(getCreatePmDocumentUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createPmDocumentRequest),
+  });
+};
+
+export const getCreatePmDocumentMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPmDocument>>,
+    TError,
+    { data: BodyType<CreatePmDocumentRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPmDocument>>,
+  TError,
+  { data: BodyType<CreatePmDocumentRequest> },
+  TContext
+> => {
+  const mutationKey = ["createPmDocument"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPmDocument>>,
+    { data: BodyType<CreatePmDocumentRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPmDocument(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePmDocumentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPmDocument>>
+>;
+export type CreatePmDocumentMutationBody = BodyType<CreatePmDocumentRequest>;
+export type CreatePmDocumentMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Register an uploaded PM document
+ */
+export const useCreatePmDocument = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPmDocument>>,
+    TError,
+    { data: BodyType<CreatePmDocumentRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createPmDocument>>,
+  TError,
+  { data: BodyType<CreatePmDocumentRequest> },
+  TContext
+> => {
+  return useMutation(getCreatePmDocumentMutationOptions(options));
+};
+
+/**
+ * @summary Delete a PM document record
+ */
+export const getDeletePmDocumentUrl = (pmId: number) => {
+  return `/api/maintenance/pms/${pmId}`;
+};
+
+export const deletePmDocument = async (
+  pmId: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeletePmDocumentUrl(pmId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeletePmDocumentMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePmDocument>>,
+    TError,
+    { pmId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deletePmDocument>>,
+  TError,
+  { pmId: number },
+  TContext
+> => {
+  const mutationKey = ["deletePmDocument"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deletePmDocument>>,
+    { pmId: number }
+  > = (props) => {
+    const { pmId } = props ?? {};
+
+    return deletePmDocument(pmId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeletePmDocumentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deletePmDocument>>
+>;
+
+export type DeletePmDocumentMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Delete a PM document record
+ */
+export const useDeletePmDocument = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePmDocument>>,
+    TError,
+    { pmId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deletePmDocument>>,
+  TError,
+  { pmId: number },
+  TContext
+> => {
+  return useMutation(getDeletePmDocumentMutationOptions(options));
+};
 
 /**
  * @summary Most recently created or updated components

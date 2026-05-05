@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import Parts from "@/pages/parts";
 import Inventory from "@/pages/inventory";
 import Tools from "@/pages/tools";
+import Maintenance from "@/pages/maintenance";
 import Documents from "@/pages/documents";
 import Settings from "@/pages/settings";
 
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/parts" component={Parts} />
           <Route path="/tools" component={Tools} />
+          <Route path="/maintenance" component={Maintenance} />
           <Route path="/inventory" component={Inventory} />
           <Route path="/documents" component={Documents} />
           <Route path="/settings" component={Settings} />
