@@ -214,73 +214,182 @@ export default function Workspace() {
       {/* Main Workspace Area */}
       <div className="flex flex-1 min-h-0">
         
-        {/* Left Panel - Model Info */}
-        <div className="w-[300px] border-r border-border bg-sidebar flex flex-col shrink-0 overflow-y-auto">
+        {/* Left Panel - Model Info + BIG selected-part display */}
+        <div className="w-[360px] border-r border-border bg-sidebar flex flex-col shrink-0 overflow-y-auto">
           {model ? (
             <>
+              {/* Compact model spec */}
               <div className="p-4 border-b border-border">
                 <h3 className="text-[10px] text-primary font-mono tracking-widest mb-3">MODEL SPECIFICATION</h3>
                 <div className="space-y-2 font-mono text-xs">
-                  <div className="flex justify-between"><span className="text-muted-foreground">PROJECT</span><span>{model.projectName || '-'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">MODEL</span><span>{model.modelName || model.name}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">S/N</span><span>{model.serialNumber || '-'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">REV</span><span>{model.revision || '-'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">FILE</span><span className="truncate max-w-[120px]">{model.fileName || '-'}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">PROJECT</span><span className="truncate text-right">{model.projectName || '-'}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">MODEL</span><span className="truncate text-right">{model.modelName || model.name}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">S/N</span><span className="truncate text-right">{model.serialNumber || '-'}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">REV</span><span className="truncate text-right">{model.revision || '-'}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">FILE</span><span className="truncate text-right max-w-[180px]">{model.fileName || '-'}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-muted-foreground">PARTS</span><span className="text-right text-primary font-bold">{components.length}</span></div>
                 </div>
-              </div>
-              
-              <div className="p-4 border-b border-border">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-[10px] text-primary font-mono tracking-widest">SELECTED COMPONENT</h3>
-                  {selectedComponent && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 rounded-none font-mono text-[10px] text-primary hover:bg-primary/10 hover:text-primary"
-                      onClick={() => openEditFor(selectedComponent)}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      EDIT
-                    </Button>
-                  )}
-                </div>
-                {selectedComponent ? (
-                  <div className="space-y-2 font-mono text-xs">
-                    <div className="flex justify-between"><span className="text-muted-foreground">CODE</span><span className="text-accent">{selectedComponent.code}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">DESC</span><span className="truncate max-w-[140px] text-right">{selectedComponent.description}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">PART NO</span><span>{selectedComponent.partNumber}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">MESH</span><span className="truncate max-w-[140px] text-right text-primary" title={selectedComponent.meshName || '-'}>{selectedComponent.meshName || '-'}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">MFG</span><span>{selectedComponent.manufacturer || '-'}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">WEIGHT</span><span>{selectedComponent.weightKg ? `${selectedComponent.weightKg} kg` : '-'}</span></div>
-                  </div>
-                ) : (
-                  <div className="text-muted-foreground text-xs font-mono text-center py-4 border border-dashed border-border">
-                    NO COMPONENT SELECTED
-                  </div>
-                )}
               </div>
 
-              <div className="p-4">
-                <h3 className="text-[10px] text-primary font-mono tracking-widest mb-3">INVENTORY SUMMARY</h3>
-                {selectedComponent ? (
-                  <div className="space-y-3 font-mono text-xs">
-                    <div className="flex justify-between items-center"><span className="text-muted-foreground">ON HAND</span><span className="text-lg">{selectedComponent.onHand || 0}</span></div>
-                    <div className="flex justify-between items-center"><span className="text-muted-foreground">RESERVED</span><span className="text-lg">{selectedComponent.reserved || 0}</span></div>
-                    <div className="flex justify-between items-center"><span className="text-muted-foreground">ON ORDER</span><span className="text-lg">{selectedComponent.onOrder || 0}</span></div>
-                    <div className="h-px bg-border my-2" />
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">AVAILABLE</span>
-                      <span className={`text-lg font-bold ${getStatusInfo(selectedComponent.onHand, selectedComponent.reserved).value <= 0 ? 'text-destructive' : 'text-[hsl(var(--status-available))]'}`}>
-                        {getStatusInfo(selectedComponent.onHand, selectedComponent.reserved).value}
-                      </span>
+              {selectedComponent ? (
+                <div className="flex-1" data-testid="panel-selected-part">
+                  {/* BIG hero header for the selected part */}
+                  <div className="p-5 border-b border-border bg-card/40 border-l-4 border-l-primary">
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <h3 className="text-[10px] text-primary font-mono tracking-widest">SELECTED PART</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 rounded-none font-mono text-[10px] text-primary hover:bg-primary/10 hover:text-primary -mt-1 -mr-1"
+                        onClick={() => openEditFor(selectedComponent)}
+                        data-testid="button-edit-selected"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        EDIT
+                      </Button>
+                    </div>
+                    <div
+                      className="font-mono text-2xl font-bold text-primary tracking-wider leading-tight break-words"
+                      data-testid="text-selected-code"
+                    >
+                      {selectedComponent.code}
+                    </div>
+                    {selectedComponent.description && (
+                      <div className="font-mono text-sm text-foreground mt-2 break-words leading-snug">
+                        {selectedComponent.description}
+                      </div>
+                    )}
+                    <div className="mt-3 flex items-center gap-2 flex-wrap">
+                      <StatusBadge
+                        onHand={selectedComponent.onHand}
+                        reserved={selectedComponent.reserved}
+                      />
+                      {selectedComponent.partNumber && (
+                        <span className="font-mono text-xs text-[#38bdf8] tracking-wider truncate">
+                          {selectedComponent.partNumber}
+                        </span>
+                      )}
                     </div>
                   </div>
-                ) : (
-                  <div className="text-muted-foreground text-xs font-mono text-center py-4 border border-dashed border-border">
-                    SELECT COMPONENT
+
+                  {/* Details — bigger rows than before */}
+                  <div className="p-5 border-b border-border">
+                    <h3 className="text-[10px] text-primary font-mono tracking-widest mb-4">DETAILS</h3>
+                    <div className="space-y-3 font-mono">
+                      {selectedComponent.meshName && (
+                        <div>
+                          <div className="text-[10px] text-muted-foreground tracking-widest mb-0.5">MESH</div>
+                          <div className="text-sm text-primary break-all" title={selectedComponent.meshName}>
+                            {selectedComponent.meshName}
+                          </div>
+                        </div>
+                      )}
+                      {selectedComponent.manufacturer && (
+                        <div>
+                          <div className="text-[10px] text-muted-foreground tracking-widest mb-0.5">MANUFACTURER</div>
+                          <div className="text-sm text-foreground break-words">{selectedComponent.manufacturer}</div>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-3">
+                        {selectedComponent.weightKg != null && (
+                          <div>
+                            <div className="text-[10px] text-muted-foreground tracking-widest mb-0.5">WEIGHT</div>
+                            <div className="text-sm text-foreground">{selectedComponent.weightKg} <span className="text-muted-foreground text-xs">kg</span></div>
+                          </div>
+                        )}
+                        {selectedComponent.lengthMm != null && (
+                          <div>
+                            <div className="text-[10px] text-muted-foreground tracking-widest mb-0.5">LENGTH</div>
+                            <div className="text-sm text-foreground">{selectedComponent.lengthMm} <span className="text-muted-foreground text-xs">mm</span></div>
+                          </div>
+                        )}
+                        {selectedComponent.connectionType && (
+                          <div>
+                            <div className="text-[10px] text-muted-foreground tracking-widest mb-0.5">CONNECTION</div>
+                            <div className="text-sm text-[#38bdf8] break-words">{selectedComponent.connectionType}</div>
+                          </div>
+                        )}
+                        {selectedComponent.wrenchSize && (
+                          <div>
+                            <div className="text-[10px] text-muted-foreground tracking-widest mb-0.5">WRENCH</div>
+                            <div className="text-sm text-[#38bdf8] break-words">{selectedComponent.wrenchSize}</div>
+                          </div>
+                        )}
+                      </div>
+                      {(selectedComponent.toolsRequired || selectedComponent.toolSize) && (
+                        <div>
+                          <div className="text-[10px] text-muted-foreground tracking-widest mb-0.5">REPLACEMENT TOOL</div>
+                          <div className="text-sm text-foreground break-words">
+                            {selectedComponent.toolsRequired || 'Tool'}
+                            {selectedComponent.toolSize ? (
+                              <span className="text-[#38bdf8] ml-2">{selectedComponent.toolSize}</span>
+                            ) : null}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Inventory — big numbers */}
+                  <div className="p-5 border-b border-border">
+                    <h3 className="text-[10px] text-primary font-mono tracking-widest mb-4">INVENTORY</h3>
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      <div className="border border-border bg-card/60 p-2 text-center">
+                        <div className="text-[9px] text-muted-foreground font-mono tracking-widest mb-1">ON HAND</div>
+                        <div className="font-mono text-2xl font-bold tabular-nums text-foreground">{selectedComponent.onHand ?? 0}</div>
+                      </div>
+                      <div className="border border-border bg-card/60 p-2 text-center">
+                        <div className="text-[9px] text-muted-foreground font-mono tracking-widest mb-1">RESERVED</div>
+                        <div className="font-mono text-2xl font-bold tabular-nums text-foreground">{selectedComponent.reserved ?? 0}</div>
+                      </div>
+                      <div className="border border-border bg-card/60 p-2 text-center">
+                        <div className="text-[9px] text-muted-foreground font-mono tracking-widest mb-1">ON ORDER</div>
+                        <div className="font-mono text-2xl font-bold tabular-nums text-foreground">{selectedComponent.onOrder ?? 0}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-end justify-between border-t border-border pt-3">
+                      <span className="text-xs font-mono text-muted-foreground tracking-widest">AVAILABLE</span>
+                      {(() => {
+                        const info = getStatusInfo(selectedComponent.onHand, selectedComponent.reserved);
+                        const cls =
+                          info.label === 'OUT'
+                            ? 'text-destructive'
+                            : info.label === 'LOW'
+                            ? 'text-[hsl(var(--status-low))]'
+                            : 'text-[hsl(var(--status-available))]';
+                        return (
+                          <span
+                            className={`font-mono text-4xl font-bold tabular-nums leading-none ${cls}`}
+                            data-testid="text-selected-available"
+                          >
+                            {info.value}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  {selectedComponent.notes && (
+                    <div className="p-5">
+                      <h3 className="text-[10px] text-primary font-mono tracking-widest mb-3">NOTES</h3>
+                      <p className="font-mono text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">
+                        {selectedComponent.notes}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center p-6" data-testid="panel-no-selection">
+                  <div className="text-center font-mono">
+                    <MousePointer2 className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+                    <p className="text-xs text-muted-foreground tracking-widest">NO PART SELECTED</p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-2 max-w-[220px] leading-relaxed">
+                      CLICK A PART IN THE 3D VIEW OR PICK ONE FROM THE LIST ON THE RIGHT
+                    </p>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center p-4">
