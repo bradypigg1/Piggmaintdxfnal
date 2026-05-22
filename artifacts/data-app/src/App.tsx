@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "@/components/sidebar";
+import { PasswordGate } from "@/components/password-gate";
 import NotFound from "@/pages/not-found";
 import Workspace from "@/pages/workspace";
 import Dashboard from "@/pages/dashboard";
@@ -40,9 +41,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
+        <PasswordGate>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+        </PasswordGate>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
