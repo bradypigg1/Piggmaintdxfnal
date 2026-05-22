@@ -405,7 +405,26 @@ export default function Workspace() {
         <div className="flex-1 flex flex-col min-w-0 bg-black relative">
           {model ? (
             <ViewerErrorBoundary resetKey={model.id}>
-              <Canvas camera={{ position: [5, 5, 5], fov: 50 }}>
+              <Canvas
+                camera={{ position: [5, 5, 5], fov: 50 }}
+                dpr={[1, 1.5]}
+                gl={{
+                  antialias: false,
+                  powerPreference: 'high-performance',
+                  failIfMajorPerformanceCaveat: false,
+                  preserveDrawingBuffer: false,
+                }}
+                onCreated={({ gl }) => {
+                  const canvas = gl.domElement;
+                  canvas.addEventListener(
+                    'webglcontextlost',
+                    (event) => {
+                      event.preventDefault();
+                    },
+                    false,
+                  );
+                }}
+              >
                 <color attach="background" args={['#0a0a0a']} />
                 <ambientLight intensity={0.5} />
                 <directionalLight position={[10, 10, 10]} intensity={1} />
